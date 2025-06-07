@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "929444955347",
+    "project_id": "money-mouthy-fb",
+    "storage_bucket": "money-mouthy-fb.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:929444955347:android:a8d2475569df1f807f0026",
+        "android_client_info": {
+          "package_name": "com.example.money_mouthy_two"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyALhiH9No-1eyjyf4L9Rwi--ztrU7tzLsY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
