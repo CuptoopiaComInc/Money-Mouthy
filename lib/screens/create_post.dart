@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../services/wallet_service.dart';
+import 'wallet_screen.dart';
 
 class CreatePostScreen extends StatefulWidget {
   const CreatePostScreen({super.key});
@@ -13,10 +15,10 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   final _titleController = TextEditingController();
   final _tagsController = TextEditingController();
   final _descriptionController = TextEditingController();
+  final WalletService _walletService = WalletService();
   
   double _postPrice = 0.05; // Minimum $0.05
   double _maxPrice = 100.0;
-  double _userAccountBalance = 50.0; // Simulated user balance
   String _selectedCurrency = 'USD';
   bool _isPublic = true;
   bool _allowComments = true;
@@ -137,6 +139,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
 
   void _showCustomAmountDialog() {
     final TextEditingController customAmountController = TextEditingController();
+    final double currentBalance = _walletService.currentBalance;
     
     showDialog(
       context: context,
@@ -145,7 +148,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('Available Balance: \$${_userAccountBalance.toStringAsFixed(2)}'),
+            Text('Available Balance: ${_walletService.formatCurrency(currentBalance)}'),
             const SizedBox(height: 16),
             TextField(
               controller: customAmountController,
@@ -166,7 +169,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
           ElevatedButton(
             onPressed: () {
               final amount = double.tryParse(customAmountController.text);
-              if (amount != null && amount >= 0.05 && amount <= _userAccountBalance) {
+              if (amount != null && amount >= 0.05 && amount <= currentBalance) {
                 setState(() {
                   _postPrice = amount;
                 });
@@ -174,7 +177,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('Please enter amount between \$0.05 and \$${_userAccountBalance.toStringAsFixed(2)}'),
+                    content: Text('Please enter amount between \$0.05 and ${_walletService.formatCurrency(currentBalance)}'),
                     backgroundColor: Colors.red,
                   ),
                 );
@@ -212,10 +215,11 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
       return;
     }
     
-    if (_postPrice > _userAccountBalance) {
+    final currentBalance = _walletService.currentBalance;
+    if (_postPrice > currentBalance) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Insufficient funds. Your balance: \$${_userAccountBalance.toStringAsFixed(2)}'),
+          content: Text('Insufficient funds. Your balance: ${_walletService.formatCurrency(currentBalance)}'),
           backgroundColor: Colors.red,
         ),
       );
@@ -226,22 +230,46 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
       _isLoading = true;
     });
 
-    // Simulate post creation
-    await Future.delayed(const Duration(seconds: 2));
+    try {
+      // Deduct balance for post creation
+      final success = await _walletService.deductBalance(
+        _postPrice,
+        'Post creation: ${_titleController.text.isNotEmpty ? _titleController.text : "Untitled post"} in $_selectedCategory',
+        postId: DateTime.now().millisecondsSinceEpoch.toString(),
+      );
 
-    if (mounted) {
+      if (!success) {
+        throw Exception('Failed to deduct balance');
+      }
+
+      // Simulate post creation delay
+      await Future.delayed(const Duration(seconds: 1));
+
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Post successfully put up in $_selectedCategory! Amount: ${_walletService.formatCurrency(_postPrice)}'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        
+        Navigator.pop(context);
+      }
+    } catch (e) {
       setState(() {
         _isLoading = false;
       });
       
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Post successfully put up in $_selectedCategory! Amount: ${_selectedCurrency == 'USD' ? '\$' : '₿'}${_postPrice.toStringAsFixed(2)}'),
-          backgroundColor: Colors.green,
+          content: Text('Failed to create post: $e'),
+          backgroundColor: Colors.red,
         ),
       );
-      
-      Navigator.pop(context);
     }
   }
 
@@ -611,7 +639,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                                 const Icon(Icons.account_balance_wallet, size: 14, color: Colors.green),
                                 const SizedBox(width: 4),
                                 Text(
-                                  '\$${_userAccountBalance.toStringAsFixed(2)}',
+                                  _walletService.formatCurrency(_walletService.currentBalance),
                                   style: const TextStyle(
                                     color: Colors.green,
                                     fontWeight: FontWeight.bold,
@@ -708,7 +736,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                                 ),
                               ),
                               Text(
-                                '\$${_userAccountBalance.toStringAsFixed(2)} (max)',
+                                '${_walletService.formatCurrency(_walletService.currentBalance)} (max)',
                                 style: TextStyle(
                                   fontSize: 12,
                                   color: Colors.grey[600],
@@ -730,8 +758,8 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                             child: Slider(
                               value: _postPrice,
                               min: 0.05,
-                              max: _userAccountBalance,
-                              divisions: ((_userAccountBalance - 0.05) * 20).round(),
+                              max: _walletService.currentBalance,
+                              divisions: ((_walletService.currentBalance - 0.05) * 20).round(),
                               onChanged: (value) {
                                 setState(() {
                                   _postPrice = value;
@@ -756,13 +784,10 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                           ),
                           TextButton(
                             onPressed: () {
-                              // TODO: Navigate to Add Funds screen
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Add Funds feature coming soon!'),
-                                  backgroundColor: Colors.blue,
-                                ),
-                              );
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (context) => const WalletScreen()),
+                              ).then((_) => setState(() {})); // Refresh when returning
                             },
                             child: const Text(
                               'Add Funds',
@@ -779,7 +804,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                       Wrap(
                         spacing: 8,
                         runSpacing: 8,
-                        children: [1.0, 5.0, 10.0, 20.0, 50.0].where((price) => price <= _userAccountBalance).map((price) {
+                        children: [1.0, 5.0, 10.0, 20.0, 50.0].where((price) => price <= _walletService.currentBalance).map((price) {
                           return GestureDetector(
                             onTap: () {
                               setState(() {

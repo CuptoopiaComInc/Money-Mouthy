@@ -5,14 +5,14 @@ import '../widgets/button.dart';
 import '../widgets/terms_and_conditions.dart';
 import '../widgets/page_title_with_indicator.dart';
 
-class CreateProfile extends StatefulWidget {
-  const CreateProfile({Key? key}) : super(key: key);
+class CreateProfileScreen extends StatefulWidget {
+  const CreateProfileScreen({Key? key}) : super(key: key);
 
   @override
-  State<CreateProfile> createState() => _CreateProfileState();
+  State<CreateProfileScreen> createState() => _CreateProfileScreenState();
 }
 
-class _CreateProfileState extends State<CreateProfile> {
+class _CreateProfileScreenState extends State<CreateProfileScreen> {
   final _usernameController = TextEditingController();
 
   @override

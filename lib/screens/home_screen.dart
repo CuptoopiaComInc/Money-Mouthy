@@ -2,9 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:money_mouthy_two/screens/create_post.dart';
 import 'package:money_mouthy_two/screens/post_feed.dart';
+import 'package:money_mouthy_two/screens/wallet_screen.dart';
+import 'package:money_mouthy_two/services/wallet_service.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  final WalletService _walletService = WalletService();
 
   @override
   Widget build(BuildContext context) {
@@ -17,6 +26,44 @@ class HomeScreen extends StatelessWidget {
         foregroundColor: Colors.white,
         title: const Text('Money Mouthy'),
         actions: [
+          // Wallet Button with Balance
+          StreamBuilder<double>(
+            stream: Stream.periodic(Duration(seconds: 1), (_) => _walletService.currentBalance),
+            initialData: _walletService.currentBalance,
+            builder: (context, snapshot) {
+              return InkWell(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const WalletScreen()),
+                  );
+                },
+                child: Container(
+                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  margin: EdgeInsets.only(right: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: Colors.white.withOpacity(0.3)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.account_balance_wallet, size: 18),
+                      SizedBox(width: 6),
+                      Text(
+                        _walletService.formatCurrency(snapshot.data ?? 0.0),
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () async {
@@ -70,7 +117,7 @@ class HomeScreen extends StatelessWidget {
         backgroundColor: const Color(0xFF5159FF),
         foregroundColor: Colors.white,
         icon: const Icon(Icons.add),
-        label: const Text('Create Post'),
+        label: const Text('Put Up'),
       ),
     );
   }

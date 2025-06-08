@@ -5,14 +5,14 @@ import '../widgets/button.dart';
 import '../widgets/terms_and_conditions.dart';
 import '../widgets/page_title_with_indicator.dart';
 
-class ChooseUsername extends StatefulWidget {
-  const ChooseUsername({Key? key}) : super(key: key);
+class ChooseUsernameScreen extends StatefulWidget {
+  const ChooseUsernameScreen({Key? key}) : super(key: key);
 
   @override
-  State<ChooseUsername> createState() => _ChooseUsernameState();
+  State<ChooseUsernameScreen> createState() => _ChooseUsernameScreenState();
 }
 
-class _ChooseUsernameState extends State<ChooseUsername> {
+class _ChooseUsernameScreenState extends State<ChooseUsernameScreen> {
   final _usernameController = TextEditingController();
 
   @override
@@ -84,7 +84,7 @@ class _ChooseUsernameState extends State<ChooseUsername> {
                         onPressed: () {
                           Navigator.push(
                             context,
-                              MaterialPageRoute(builder: (context) => const CreateProfile())
+                              MaterialPageRoute(builder: (context) => const CreateProfileScreen())
                             );
                         },
                       ),

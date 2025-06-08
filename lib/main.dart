@@ -4,7 +4,15 @@ import 'package:money_mouthy_two/firebase_options.dart';
 import 'screens/sign_up.dart';
 import 'screens/login.dart';
 import 'screens/create_account.dart';
+import 'screens/create_profile.dart';
+import 'screens/choose_username.dart';
+import 'screens/otp_verification.dart';
 import 'screens/home_screen.dart';
+import 'screens/create_post.dart';
+import 'screens/post_feed.dart';
+import 'screens/categories_ranking.dart';
+import 'screens/wallet_screen.dart';
+import 'services/wallet_service.dart';
 import 'package:firebase_core/firebase_core.dart';
 
 void main() async {
@@ -19,6 +27,9 @@ void main() async {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
+
+    // Initialize Wallet Service
+    await WalletService().initialize();
 
   runApp(const MyApp());
 }
@@ -42,6 +53,13 @@ class MyApp extends StatelessWidget {
         '/login': (context) => const LoginScreen(),
         '/create-account': (context) => const CreateAccountScreen(),
         '/home': (context) => const HomeScreen(),
+        '/create_profile': (context) => const CreateProfileScreen(),
+        '/choose_username': (context) => const ChooseUsernameScreen(),
+        '/otp_verification': (context) => const OtpVerificationScreen(email: ''),
+        '/create_post': (context) => const CreatePostScreen(),
+        '/post_feed': (context) => const PostFeedScreen(),
+        '/categories_ranking': (context) => const CategoriesRankingScreen(),
+        '/wallet': (context) => const WalletScreen(),
       },
     );
   }

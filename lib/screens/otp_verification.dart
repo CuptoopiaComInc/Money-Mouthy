@@ -106,7 +106,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
-              builder: (context) => const CreateProfile(),
+              builder: (context) => const CreateProfileScreen(),
             ),
           );
         }
