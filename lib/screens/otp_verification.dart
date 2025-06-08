@@ -90,7 +90,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
     );
   }
 
-    Future<void> _verifyOtp(String otp) async {
+  Future<void> _verifyOtp(String otp) async {
     setState(() {
       _isLoading = true;
     });
@@ -106,7 +106,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
-              builder: (context) => const CreateProfileScreen(),
+              builder: (context) => const ChooseUsernameScreen(),
             ),
           );
         }
@@ -185,46 +185,103 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
         ),
         body: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.all(24.0),
+            padding: const EdgeInsets.symmetric(horizontal: 24.0),
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
               children: [
+                const SizedBox(height: 40),
+                
+                // Logo
+                const Center(
+                  child: AppLogo(),
+                ),
+                
+                const SizedBox(height: 60),
+                
                 const Text(
                   'Enter Passcode',
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
+                    color: Colors.black,
                   ),
                 ),
+                
+                const SizedBox(height: 20),
+                
+                const Text(
+                  'Enter your 4-digit passcode',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.grey,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                
                 const SizedBox(height: 40),
+                
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: List.generate(
-                    4,
-                    (index) => SizedBox(
-                      width: 50,
+                  children: List.generate(4, (index) {
+                    return SizedBox(
+                      width: 60,
+                      height: 60,
                       child: TextField(
                         controller: _passcodeControllers[index],
                         focusNode: _passcodeFocusNodes[index],
-                        textAlign: TextAlign.center,
                         keyboardType: TextInputType.number,
+                        textAlign: TextAlign.center,
+                        obscureText: true,
                         maxLength: 1,
+                        style: const TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
                         decoration: InputDecoration(
                           counterText: '',
+                          filled: true,
+                          fillColor: Colors.grey[50],
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.grey.shade300),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.grey.shade300),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(color: Color(0xFF5159FF), width: 2),
                           ),
                         ),
+                        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                         onChanged: (value) {
                           if (value.isNotEmpty && index < 3) {
                             _passcodeFocusNodes[index + 1].requestFocus();
+                          } else if (value.isEmpty && index > 0) {
+                            _passcodeFocusNodes[index - 1].requestFocus();
                           }
-                          if (value.length == 1 && index == 3) {
+                          
+                          if (index == 3 && value.isNotEmpty) {
                             _verifyPasscode();
                           }
                         },
                       ),
+                    );
+                  }),
+                ),
+                
+                const Spacer(),
+                
+                // Terms and conditions
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 40),
+                  child: Text(
+                    "By signing up you agree to Money Mouthy's terms and conditions.",
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey.shade600,
                     ),
+                    textAlign: TextAlign.center,
                   ),
                 ),
               ],
@@ -246,72 +303,205 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
       ),
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(24.0),
+          padding: const EdgeInsets.symmetric(horizontal: 24.0),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              const SizedBox(height: 40),
+              
+              // Logo
+              const Center(
+                child: AppLogo(),
+              ),
+              
+              const SizedBox(height: 60),
+              
               const Text(
-                'Enter Verification Code',
+                'OTP Verification',
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
+                  color: Colors.black,
                 ),
               ),
-              const SizedBox(height: 8),
+              
+              const SizedBox(height: 20),
+              
+              // Progress indicator
+              Container(
+                width: 120,
+                height: 4,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(2),
+                  color: Colors.grey.shade200,
+                ),
+                child: FractionallySizedBox(
+                  alignment: Alignment.centerLeft,
+                  widthFactor: 0.4, // 40% progress
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(2),
+                      color: const Color(0xFF5159FF),
+                    ),
+                  ),
+                ),
+              ),
+              
+              const SizedBox(height: 20),
+              
               Text(
-                'We have sent a verification code to ${widget.email}',
+                'Code has been sent to\n${widget.email}',
                 style: const TextStyle(
+                  fontSize: 16,
                   color: Colors.grey,
-                  fontSize: 14,
                 ),
                 textAlign: TextAlign.center,
               ),
+              
               const SizedBox(height: 40),
+              
+              // OTP Input Fields
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: List.generate(
-                  6,
-                  (index) => SizedBox(
-                    width: 40,
+                children: List.generate(6, (index) {
+                  return SizedBox(
+                    width: 45,
+                    height: 60,
                     child: TextField(
                       controller: _controllers[index],
                       focusNode: _focusNodes[index],
-                      textAlign: TextAlign.center,
                       keyboardType: TextInputType.number,
+                      textAlign: TextAlign.center,
                       maxLength: 1,
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
                       decoration: InputDecoration(
                         counterText: '',
+                        filled: true,
+                        fillColor: Colors.white,
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.grey.shade400, width: 1.5),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.grey.shade400, width: 1.5),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Color(0xFF5159FF), width: 2),
                         ),
                       ),
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                       onChanged: (value) {
                         if (value.isNotEmpty && index < 5) {
                           _focusNodes[index + 1].requestFocus();
+                        } else if (value.isEmpty && index > 0) {
+                          _focusNodes[index - 1].requestFocus();
                         }
-                        if (value.length == 1 && index == 5) {
+                        
+                        if (index == 5 && value.isNotEmpty) {
                           final otp = _controllers.map((c) => c.text).join();
-                          _verifyOtp(otp);
+                          if (otp.length == 6) {
+                            _verifyOtp(otp);
+                          }
                         }
                       },
                     ),
-                  ),
-                ),
+                  );
+                }),
               ),
-              const SizedBox(height: 24),
-              if (_isLoading)
-                const CircularProgressIndicator()
-              else
-                  TextButton(
-                  onPressed: _sendOtp,
-                    child: const Text(
-                    'Resend Code',
-                      style: TextStyle(
-                        color: Color(0xFF5159FF),
+              
+              const SizedBox(height: 30),
+              
+              // Resend text
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text(
+                    "Haven't received the verification code? ",
+                    style: TextStyle(
                       fontSize: 14,
+                      color: Colors.grey,
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: _sendOtp,
+                    child: const Text(
+                      'Resend',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Color(0xFF5159FF),
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ),
+                ],
+            ),
+              
+              const SizedBox(height: 40),
+              
+              // Verify button
+              ElevatedButton(
+                onPressed: _isLoading
+                    ? null
+                    : () {
+                        final otp = _controllers.map((c) => c.text).join();
+                        if (otp.length == 6) {
+                          _verifyOtp(otp);
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Please enter complete OTP'),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                        }
+                      },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF5159FF),
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  minimumSize: const Size(double.infinity, 56),
+                ),
+                child: _isLoading
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        ),
+                      )
+                    : const Text(
+                        'Verify',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+              ),
+              
+              const Spacer(),
+              
+              // Terms and conditions
+              Padding(
+                padding: const EdgeInsets.only(bottom: 40),
+                child: Text(
+                  "By signing up you agree to Money Mouthy's terms and conditions.",
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey.shade600,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
             ],
           ),
         ),

@@ -16,43 +16,43 @@ class SignUpScreen extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 24.0),
           child: Column(
             children: [
-              const SizedBox(height: 60),
+              const SizedBox(height: 80),
               
               // Logo and app name
               const Center(
-                child: AppLogo(
-                ),
+                child: AppLogo(),
               ),
               
-              const SizedBox(height: 50),
+              const SizedBox(height: 60),
               
-              // Join the conversation text
+              // Your opinion has value tagline
               RichText(
                 text: const TextSpan(
-                  style: TextStyle( // Default style for the entire text
-                    color: Colors.black, // Or your default text color
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
                   ),
                   children: <TextSpan>[
                     TextSpan(
-                      text: 'Join the conversation ',
+                      text: 'Your opinion has value ',
+                    ),
+                    TextSpan(
+                      text: '\$0.05',
                       style: TextStyle(
-                        fontSize: 16,
+                        color: Color(0xFF5159FF),
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     TextSpan(
-                      text: 'and be part of what\'s happening globally just with a click',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.black,
-                      ),
+                      text: ' more! Join the conversation.',
                     ),
                   ],
                 ),
-                textAlign: TextAlign.center, // If you want to center the whole text
+                textAlign: TextAlign.center,
               ),
               
-              const SizedBox(height: 30),
+              const SizedBox(height: 40),
               
               // Social login buttons
               Column(
@@ -61,14 +61,15 @@ class SignUpScreen extends StatelessWidget {
                   ElevatedButton(
                     onPressed: () {},
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color.fromARGB(219, 236, 236, 236),
+                      backgroundColor: Colors.white,
                       foregroundColor: Colors.black,
-                      elevation: 1,
+                      elevation: 0,
+                      side: BorderSide(color: Colors.grey.shade300, width: 1),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(12),
                       ),
                       padding: const EdgeInsets.symmetric(vertical: 16),
-                      minimumSize: const Size(double.infinity, 50),
+                      minimumSize: const Size(double.infinity, 56),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -87,26 +88,30 @@ class SignUpScreen extends StatelessWidget {
                         const SizedBox(width: 12),
                         const Text(
                           "Continue with Google",
-                          style: TextStyle(fontSize: 13),
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       ],
                     ),
                   ),
                   
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 16),
                   
                   // Apple login button
                   ElevatedButton(
                     onPressed: () {},
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color.fromARGB(219, 236, 236, 236),
+                      backgroundColor: Colors.white,
                       foregroundColor: Colors.black,
-                      elevation: 1,
+                      elevation: 0,
+                      side: BorderSide(color: Colors.grey.shade300, width: 1),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(12),
                       ),
                       padding: const EdgeInsets.symmetric(vertical: 16),
-                      minimumSize: const Size(double.infinity, 50),
+                      minimumSize: const Size(double.infinity, 56),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -115,7 +120,10 @@ class SignUpScreen extends StatelessWidget {
                         const SizedBox(width: 12),
                         const Text(
                           "Continue with Apple",
-                          style: TextStyle(fontSize: 13),
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       ],
                     ),
@@ -123,55 +131,32 @@ class SignUpScreen extends StatelessWidget {
                 ],
               ),
               
-              const SizedBox(height: 20),
-              
-              // Or divider
-              const Row(
-                children: [
-                  Expanded(
-                    child: Divider(
-                      color: Colors.grey,
-                      thickness: 0.5,
-                    ),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16.0),
-                    child: Text(
-                      "Or",
-                      style: TextStyle(color: Colors.grey),
-                    ),
-                  ),
-                  Expanded(
-                    child: Divider(
-                      color: Colors.grey,
-                      thickness: 0.5,
-                    ),
-                  ),
-                ],
-              ),
-              
-              const SizedBox(height: 20),
+              const SizedBox(height: 32),
               
               // Create account button
               ElevatedButton(
                 onPressed: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context)=> const CreateAccountScreen())
+                    MaterialPageRoute(builder: (context) => const CreateAccountScreen())
                   );
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Color(0xFF5159FF),
+                  backgroundColor: const Color(0xFF5159FF),
                   foregroundColor: Colors.white,
+                  elevation: 0,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(12),
                   ),
                   padding: const EdgeInsets.symmetric(vertical: 16),
-                  minimumSize: const Size(double.infinity, 50),
+                  minimumSize: const Size(double.infinity, 56),
                 ),
                 child: const Text(
                   "Create an account",
-                  style: TextStyle(fontSize: 13),
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
               
@@ -179,42 +164,33 @@ class SignUpScreen extends StatelessWidget {
               
               // Terms and conditions
               Container(
-                padding: const EdgeInsets.only(bottom: 24),
-                child: Column(
-                  children: [
-                    const Divider(
-                      color: Colors.grey,
-                      thickness: 0.5,
-                    ),
-                    const SizedBox(height: 16),
-                    RichText(
-                      textAlign: TextAlign.center,
-                      text: TextSpan(
-                        style: const TextStyle(fontSize: 12, color: Colors.black54),
-                        children: [
-                          const TextSpan(
-                            text: "By signing up you agree to Money Mouthy's terms and conditions. Have an account already? ",
-                          ),
-                          TextSpan(
-                            text: "LOGIN",
-                            style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black,
-                            ),
-                            recognizer: TapGestureRecognizer()..onTap = () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => const LoginScreen(),
-                                ),
-                              );
-                            },
-                          ),
-                        ],
+                padding: const EdgeInsets.only(bottom: 40),
+                child: RichText(
+                  textAlign: TextAlign.center,
+                  text: TextSpan(
+                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                    children: [
+                      const TextSpan(
+                        text: "By signing up you agree to Money Mouthy's terms and conditions. Have an account already? ",
                       ),
-                    ),
-                  ],
+                      TextSpan(
+                        text: "LOGIN",
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
+                        ),
+                        recognizer: TapGestureRecognizer()..onTap = () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const LoginScreen(),
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],

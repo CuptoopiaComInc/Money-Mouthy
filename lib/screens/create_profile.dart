@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:money_mouthy_two/screens/onboarding_complete.dart';
 import '../widgets/app_logo.dart';
 import '../widgets/button.dart';
 import '../widgets/terms_and_conditions.dart';
@@ -13,13 +14,7 @@ class CreateProfileScreen extends StatefulWidget {
 }
 
 class _CreateProfileScreenState extends State<CreateProfileScreen> {
-  final _usernameController = TextEditingController();
-
-  @override
-  void dispose() {
-    _usernameController.dispose();
-    super.dispose();
-  }
+  bool _hasProfileImage = false;
 
   @override
   Widget build(BuildContext context) {
@@ -34,119 +29,191 @@ class _CreateProfileScreenState extends State<CreateProfileScreen> {
         ),
         actions: [
           Padding(
-            padding: const EdgeInsets.only(right: 12.0),
+            padding: const EdgeInsets.only(right: 24.0),
             child: TextButton(
               onPressed: () {
                 // Handle skip logic here
-                print("Skip for Now pressed");
+                Navigator.pushReplacementNamed(context, '/home');
               },
-              style: TextButton.styleFrom(
-                backgroundColor: Colors.grey[200], // Color with opacity
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20.0), // Rounded corners
-                ),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
-                ),
-                minimumSize: Size.zero, // Set minimum size constraints
-                tapTargetSize:
-                    MaterialTapTargetSize.shrinkWrap, // Remove extra padding
-              ),
               child: const Text(
                 'Skip for Now',
-                style: TextStyle(color: Colors.black, fontSize: 10),
+                style: TextStyle(
+                  color: Colors.grey,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ),
           ),
         ],
       ),
       body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            return SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 14.0),
-              child: ConstrainedBox(
-                constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                child: IntrinsicHeight(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      const SizedBox(height: 40),
-                      SizedBox(
-                        width: 200,
-                        height: 10,
-                        child: Stack(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24.0),
+          child: Column(
+            children: [
+              const SizedBox(height: 40),
+              
+              // Progress indicator
+              Container(
+                width: 120,
+                height: 4,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(2),
+                  color: Colors.grey.shade200,
+                ),
+                child: FractionallySizedBox(
+                  alignment: Alignment.centerLeft,
+                  widthFactor: 0.8, // 80% progress
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(2),
+                      color: const Color(0xFF5159FF),
+                    ),
+                  ),
+                ),
+              ),
+              
+              const SizedBox(height: 20),
+              
+              // Title
+              const Text(
+                'Create your profile',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
+              ),
+              
+              const SizedBox(height: 20),
+              
+              // Subtitle
+              const Text(
+                'Make it easy for people to know its you\nby uploading your picture.',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.grey,
+                  height: 1.4,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              
+              const SizedBox(height: 80),
+              
+              // Profile image picker
+              GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _hasProfileImage = !_hasProfileImage;
+                  });
+                },
+                child: Container(
+                  width: 120,
+                  height: 120,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: _hasProfileImage ? null : Colors.grey.shade200,
+                    image: _hasProfileImage
+                        ? const DecorationImage(
+                            image: AssetImage('assets/images/profile_sample.png'),
+                            fit: BoxFit.cover,
+                          )
+                        : null,
+                  ),
+                  child: _hasProfileImage
+                      ? Stack(
                           children: [
-                            Positioned.fill(
-                              child: Align(
-                                alignment: Alignment.center,
-                                child: Container(
-                                  height: 2,
-                                  color: Colors.grey[300],
-                                ),
-                              ),
-                            ),
                             Positioned(
-                              left: (200 + 100) * 0.5,
-                              top: 2.5,
+                              bottom: 0,
+                              right: 0,
                               child: Container(
-                                width: 50,
-                                height: 5,
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFF5159FF),
-                                  borderRadius: BorderRadius.circular(2),
+                                width: 32,
+                                height: 32,
+                                decoration: const BoxDecoration(
+                                  color: Color(0xFF5159FF),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.check,
+                                  color: Colors.white,
+                                  size: 20,
                                 ),
                               ),
                             ),
                           ],
+                        )
+                      : Icon(
+                          Icons.camera_alt,
+                          size: 40,
+                          color: Colors.grey.shade500,
                         ),
+                ),
+              ),
+              
+              const SizedBox(height: 80),
+              
+              // Next button
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const OnboardingCompleteScreen(),
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF5159FF),
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  minimumSize: const Size(double.infinity, 56),
+                ),
+                child: const Text(
+                  'Next',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              
+              const Spacer(),
+              
+              // Terms and conditions
+              Padding(
+                padding: const EdgeInsets.only(bottom: 40),
+                child: RichText(
+                  textAlign: TextAlign.center,
+                  text: TextSpan(
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey.shade600,
+                    ),
+                    children: const [
+                      TextSpan(
+                        text: "By signing up you agree to Money Mouthy's ",
                       ),
-                      SizedBox(height: 14), // spacing between line and text
-                      Text(
-                        "Create your profile",
+                      TextSpan(
+                        text: "terms and conditions",
                         style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w600,
                           color: Colors.black,
                         ),
                       ),
-                      const SizedBox(height: 80),
-                      Text(
-                        "Make it easy for people to know its you by uploading your picture",
-                        style: TextStyle(color: Colors.grey[600], fontSize: 10),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 30),
-                      // place here
-                      Container(
-                        width: 80.0,
-                        height: 80.0,
-                        decoration: BoxDecoration(
-                          color: Colors.grey[300],
-                          shape: BoxShape.circle,
-                        ),
-                        child: Center(
-                          child: Icon(
-                            Icons.add_a_photo_rounded,
-                            size: 30.0,
-                            color: Colors.grey[600],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 30),
-                      PurpleButton(buttonText: 'Next', onPressed: () {}),
-                      const Spacer(),
-                      const Padding(
-                        padding: EdgeInsets.only(bottom: 20),
-                        child: TermsAndConditions(),
+                      TextSpan(
+                        text: ".",
                       ),
                     ],
                   ),
                 ),
               ),
-            );
-          },
+            ],
+          ),
         ),
       ),
     );
