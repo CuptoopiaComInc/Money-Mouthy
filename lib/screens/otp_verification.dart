@@ -309,9 +309,9 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                       style: TextStyle(
                         color: Color(0xFF5159FF),
                       fontSize: 14,
+                      ),
                     ),
                   ),
-                ),
             ],
           ),
         ),
