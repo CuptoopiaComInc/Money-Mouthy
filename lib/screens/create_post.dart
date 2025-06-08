@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../services/wallet_service.dart';
+import '../services/post_service.dart';
 import 'wallet_screen.dart';
 
 class CreatePostScreen extends StatefulWidget {
@@ -16,6 +18,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   final _tagsController = TextEditingController();
   final _descriptionController = TextEditingController();
   final WalletService _walletService = WalletService();
+  final PostService _postService = PostService();
   
   double _postPrice = 0.05; // Minimum $0.05
   double _maxPrice = 100.0;
@@ -23,7 +26,10 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   bool _isPublic = true;
   bool _allowComments = true;
   bool _isLoading = false;
+  bool _isSubmitting = false;
   String? _selectedCategory;
+  String? _imageUrl;
+  String? _linkUrl;
   
   // Available categories
   final List<Map<String, dynamic>> _categories = [
@@ -191,86 +197,191 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   }
 
   Future<void> _publishPost() async {
+    // Prevent multiple submissions
+    if (_isSubmitting) return;
+
+    // Validate form
     if (!_formKey.currentState!.validate()) {
+      _showErrorMessage('Please fix the errors in the form');
       return;
     }
     
+    // Validate category selection
     if (_selectedCategory == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please select a category'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      _showErrorMessage('Please select a category');
       return;
     }
     
+    // Validate minimum price
     if (_postPrice < 0.05) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Minimum post price is \$0.05'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      _showErrorMessage('Minimum post price is \$0.05');
       return;
     }
     
+    // Check wallet balance
     final currentBalance = _walletService.currentBalance;
     if (_postPrice > currentBalance) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Insufficient funds. Your balance: ${_walletService.formatCurrency(currentBalance)}'),
-          backgroundColor: Colors.red,
-        ),
+      _showErrorMessage(
+        'Insufficient funds. Your balance: ${_walletService.formatCurrency(currentBalance)}\n\nTap "Add Funds" to top up your wallet.',
+        showAddFunds: true,
       );
       return;
     }
 
+    // Start submission process
     setState(() {
+      _isSubmitting = true;
       _isLoading = true;
     });
 
     try {
+      // Show submission feedback
+      _showProgressMessage('Processing payment...');
+
       // Deduct balance for post creation
-      final success = await _walletService.deductBalance(
+      final balanceDeducted = await _walletService.deductBalance(
         _postPrice,
         'Post creation: ${_titleController.text.isNotEmpty ? _titleController.text : "Untitled post"} in $_selectedCategory',
-        postId: DateTime.now().millisecondsSinceEpoch.toString(),
+        postId: 'temp_${DateTime.now().millisecondsSinceEpoch}',
       );
 
-      if (!success) {
-        throw Exception('Failed to deduct balance');
+      if (!balanceDeducted) {
+        throw Exception('Failed to process payment. Please try again.');
       }
 
-      // Simulate post creation delay
-      await Future.delayed(const Duration(seconds: 1));
+      // Update progress
+      _showProgressMessage('Creating post...');
+
+      // Parse tags from description
+      final tags = _parseHashtags(_descriptionController.text);
+
+      // Create the post
+      final postId = await _postService.createPost(
+        title: _titleController.text.trim().isEmpty ? null : _titleController.text.trim(),
+        content: _contentController.text.trim(),
+        price: _postPrice,
+        category: _selectedCategory!,
+        tags: tags,
+        isPublic: _isPublic,
+        allowComments: _allowComments,
+        imageUrl: _imageUrl,
+        linkUrl: _linkUrl,
+      );
+
+      // Update progress
+      _showProgressMessage('Finalizing...');
+
+      // Add a small delay for better UX
+      await Future.delayed(const Duration(milliseconds: 800));
 
       if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
+        // Provide haptic feedback
+        HapticFeedback.mediumImpact();
         
+        // Show success message
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Post successfully put up in $_selectedCategory! Amount: ${_walletService.formatCurrency(_postPrice)}'),
+            content: Row(
+              children: [
+                const Icon(Icons.check_circle, color: Colors.white),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Post successfully published in $_selectedCategory! Amount: ${_walletService.formatCurrency(_postPrice)}',
+                  ),
+                ),
+              ],
+            ),
             backgroundColor: Colors.green,
+            duration: const Duration(seconds: 3),
+            action: SnackBarAction(
+              label: 'View',
+              textColor: Colors.white,
+              onPressed: () {
+                // Navigate to post feed to see the new post
+                Navigator.popUntil(context, (route) => route.isFirst);
+              },
+            ),
           ),
         );
         
-        Navigator.pop(context);
+        // Navigate back with success result
+        Navigator.pop(context, {
+          'success': true,
+          'postId': postId,
+          'category': _selectedCategory,
+          'price': _postPrice,
+        });
       }
     } catch (e) {
-      setState(() {
-        _isLoading = false;
-      });
-      
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to create post: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      if (mounted) {
+        _showErrorMessage(
+          'Failed to create post: ${e.toString().replaceAll('Exception: ', '')}',
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSubmitting = false;
+          _isLoading = false;
+        });
+      }
     }
+  }
+
+  List<String> _parseHashtags(String text) {
+    final RegExp hashtagRegex = RegExp(r'#\w+');
+    final matches = hashtagRegex.allMatches(text);
+    return matches.map((match) => match.group(0)!).toList();
+  }
+
+  void _showErrorMessage(String message, {bool showAddFunds = false}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.error_outline, color: Colors.white),
+            const SizedBox(width: 8),
+            Expanded(child: Text(message)),
+          ],
+        ),
+        backgroundColor: Colors.red,
+        duration: const Duration(seconds: 4),
+        action: showAddFunds ? SnackBarAction(
+          label: 'Add Funds',
+          textColor: Colors.white,
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const WalletScreen()),
+            ).then((_) => setState(() {}));
+          },
+        ) : null,
+      ),
+    );
+  }
+
+  void _showProgressMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const SizedBox(
+              width: 16,
+              height: 16,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Text(message),
+          ],
+        ),
+        backgroundColor: Colors.blue,
+        duration: const Duration(seconds: 2),
+      ),
+    );
   }
 
   @override
@@ -292,25 +403,34 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
           Padding(
             padding: const EdgeInsets.only(right: 16.0),
             child: ElevatedButton(
-              onPressed: _isLoading ? null : _publishPost,
+              onPressed: (_isLoading || _isSubmitting) ? null : _publishPost,
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF5159FF),
+                backgroundColor: (_isLoading || _isSubmitting) 
+                    ? Colors.grey.shade400 
+                    : const Color(0xFF5159FF),
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20),
                 ),
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                elevation: (_isLoading || _isSubmitting) ? 0 : 2,
               ),
-              child: _isLoading
-                  ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(
-                        color: Colors.white,
-                        strokeWidth: 2,
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 200),
+                child: (_isLoading || _isSubmitting)
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : const Text(
+                        'Put Up',
+                        style: TextStyle(fontWeight: FontWeight.w600),
                       ),
-                    )
-                  : const Text('Put Up'),
+              ),
             ),
           ),
         ],

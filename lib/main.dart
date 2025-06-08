@@ -13,6 +13,7 @@ import 'screens/post_feed.dart';
 import 'screens/categories_ranking.dart';
 import 'screens/wallet_screen.dart';
 import 'services/wallet_service.dart';
+import 'services/post_service.dart';
 import 'package:firebase_core/firebase_core.dart';
 
 void main() async {
@@ -28,8 +29,9 @@ void main() async {
       options: DefaultFirebaseOptions.currentPlatform,
     );
 
-    // Initialize Wallet Service
+    // Initialize services
     await WalletService().initialize();
+    await PostService().initialize();
 
   runApp(const MyApp());
 }

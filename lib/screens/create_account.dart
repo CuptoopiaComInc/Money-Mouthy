@@ -51,14 +51,14 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
       });
       
       // Navigate to OTP verification screen
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => OtpVerificationScreen(
-            email: _emailController.text.trim(),
-          ),
-        ),
-      );
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => OtpVerificationScreen(
+                    email: _emailController.text.trim(),
+                  ),
+                ),
+              );
     }
   }
 
