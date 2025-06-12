@@ -1,4 +1,4 @@
-# money_mouthy_two
+# money_mouthy
 
 A new Flutter project.
 
