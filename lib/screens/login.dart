@@ -95,19 +95,37 @@ class _LoginScreenState extends State<LoginScreen> {
         return;
       }
 
-      // Update Firestore emailVerified status (create doc if missing)
+      // Update or create user document (emailVerified/lastLogin)
       try {
         await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
           'emailVerified': true,
           'lastLogin': FieldValue.serverTimestamp(),
         }, SetOptions(merge: true));
       } catch (e) {
-        // Log but don't block login if Firestore write fails
         debugPrint('Unable to update user doc after login: $e');
       }
 
-    if (mounted) {
+      // Retrieve user document once
+      Map<String, dynamic>? userData;
+      bool profileCompleted = false;
+      try {
+        final snapshot = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+        userData = snapshot.data();
+        profileCompleted = (userData?['profileCompleted'] ?? false) as bool;
+      } catch (e) {
+        debugPrint('Unable to fetch user profileCompleted flag: $e');
+      }
+
+      if (!mounted) return;
+
+      // route decision
+      final hasUsername = (userData?['username']?.toString().isNotEmpty ?? false);
+      if (profileCompleted) {
         Navigator.pushReplacementNamed(context, '/home');
+      } else if (!hasUsername) {
+        Navigator.pushReplacementNamed(context, '/choose_username');
+      } else {
+        Navigator.pushReplacementNamed(context, '/create_profile');
       }
     } on FirebaseAuthException catch (e) {
       String errorMessage;

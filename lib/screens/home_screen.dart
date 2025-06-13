@@ -4,6 +4,7 @@ import 'package:money_mouthy_two/screens/create_post.dart';
 import 'package:money_mouthy_two/screens/wallet_screen.dart';
 import 'package:money_mouthy_two/services/wallet_service.dart';
 import 'package:money_mouthy_two/widgets/app_logo.dart';
+import 'package:money_mouthy_two/widgets/profile_drawer.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -13,6 +14,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final WalletService _walletService = WalletService();
   late TabController _tabController;
   String selectedCategory = 'News';
@@ -32,28 +34,28 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       'time': '6h',
       'title': 'Reality in Ethiopia',
       'content': 'Don\'t miss out on trending new happening around the world, choose from our list of categories and share your stories',
-      'image': 'assets/images/post1.jpg',
+      'image': 'https://images.unsplash.com/photo-1506748686214-e9df14d4d9d0?q=80&w=1887&auto=format&fit=crop',
       'category': 'News',
       'isPaid': true,
       'amount': 100,
       'likes': 0,
       'reposts': 0,
       'comments': 12,
-      'avatar': 'assets/images/avatar1.jpg',
+      'avatar': 'https://ui-avatars.com/api/?name=Lina+Kamson&color=7F9CF5&background=EBF4FF',
     },
     {
       'author': 'Doris Camilla',
       'time': '8h',
-      'title': 'Reality in Ethiopia',
-      'content': 'Don\'t miss out on trending new happening around the world, choose from our list of categories and share your stories',
-      'image': 'assets/images/post2.jpg',
+      'title': 'The Future of Tech',
+      'content': 'Exploring the next wave of innovation and what it means for our daily lives. A deep dive into AI, blockchain, and more.',
+      'image': 'https://images.unsplash.com/photo-1531297484001-80022131f5a1?q=80&w=2020&auto=format&fit=crop',
       'category': 'Politics',
       'isPaid': true,
       'amount': 100,
       'likes': 0,
       'reposts': 0,
       'comments': 8,
-      'avatar': 'assets/images/avatar2.jpg',
+      'avatar': 'https://ui-avatars.com/api/?name=Doris+Camilla&color=7F9CF5&background=EBF4FF',
     },
   ];
 
@@ -80,13 +82,16 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _scaffoldKey,
       backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.menu, color: Colors.black),
-          onPressed: () {},
+          onPressed: () {
+            _scaffoldKey.currentState?.openDrawer();
+          },
         ),
         title: Center(
           child: Container(
@@ -121,6 +126,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           // Empty actions - no wallet balance shown
         ],
       ),
+      drawer: ProfileDrawer(),
       body: Column(
         children: [
           // Tab bar
@@ -168,8 +174,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               shape: BoxShape.circle,
                             ),
                             child: ClipOval(
-                              child: Image.asset(
-                                'assets/images/avatar1.jpg',
+                              child: Image.network(
+                                'https://ui-avatars.com/api/?name=John+Doe&color=7F9CF5&background=EBF4FF',
                                 fit: BoxFit.cover,
                                 errorBuilder: (context, error, stackTrace) {
                                   return const Icon(Icons.person, color: Colors.white);
@@ -315,206 +321,84 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   Widget _buildPostCard(Map<String, dynamic> post) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            spreadRadius: 1,
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade200),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Post header
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: const BoxDecoration(
-                    color: Colors.grey,
-                    shape: BoxShape.circle,
-                  ),
-                  child: ClipOval(
-                    child: Image.asset(
-                      post['avatar'],
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return const Icon(Icons.person, color: Colors.white);
-                      },
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Text(
-                            post['author'],
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            post['time'],
-                            style: const TextStyle(
-                              color: Colors.grey,
-                              fontSize: 12,
-                            ),
-                          ),
-                          const Spacer(),
-                          if (post['isPaid'])
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: Colors.grey.shade200,
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Text(
-                                'Paid Post  \$${post['amount']}',
-                                style: const TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          const SizedBox(width: 8),
-                          const Text(
-                            '1 hr',
-                            style: TextStyle(fontSize: 10, color: Colors.grey),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        post['title'],
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 16,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          
-          // Post content
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Text(
-              post['content'],
-              style: const TextStyle(
-                fontSize: 14,
-                height: 1.4,
-                color: Colors.black87,
+          Row(
+            children: [
+              CircleAvatar(
+                radius: 20,
+                backgroundImage: NetworkImage(post['avatar']),
+                backgroundColor: Colors.grey.shade200,
               ),
-            ),
+              const SizedBox(width: 10),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(post['author'], style: const TextStyle(fontWeight: FontWeight.bold)),
+                  Text(post['time'], style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                ],
+              ),
+              const Spacer(),
+              if (post['isPaid'])
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade200,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text('\$${post['amount']}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                ),
+            ],
           ),
-          
-          const SizedBox(height: 12),
-          
-          // Post image
-          Container(
-            height: 200,
-            width: double.infinity,
-            margin: const EdgeInsets.symmetric(horizontal: 16),
-            decoration: BoxDecoration(
+          const SizedBox(height: 10),
+          if (post['image'] != null && (post['image'] as String).isNotEmpty)
+            ClipRRect(
               borderRadius: BorderRadius.circular(8),
-              color: Colors.grey.shade200,
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: Image.asset(
+              child: Image.network(
                 post['image'],
+                width: double.infinity,
+                height: 150,
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) {
                   return Container(
-                    color: Colors.grey.shade200,
-                    child: const Center(
-                      child: Icon(Icons.image, size: 50, color: Colors.grey),
-                    ),
+                    height: 150,
+                    color: Colors.grey.shade300,
+                    child: const Icon(Icons.image_not_supported, color: Colors.white),
                   );
                 },
               ),
             ),
-          ),
-          
-          const SizedBox(height: 12),
-          
-          // Post actions
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Row(
-              children: [
-                _buildActionButton(Icons.favorite_border, post['likes'].toString(), Colors.red),
-                const SizedBox(width: 24),
-                _buildActionButton(Icons.repeat, post['reposts'].toString(), Colors.green),
-                const SizedBox(width: 24),
-                _buildActionButton(Icons.chat_bubble_outline, post['comments'].toString(), Colors.blue),
-                const Spacer(),
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade100,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: const Icon(Icons.share, color: Colors.grey, size: 16),
-                ),
-                const SizedBox(width: 12),
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade100,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: const Icon(Icons.bookmark_border, color: Colors.grey, size: 16),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 10),
+          Text(post['title'], style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 5),
+          Text(post['content'], style: const TextStyle(color: Colors.grey)),
+          const SizedBox(height: 10),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _iconTextButton(Icons.favorite_border, '${post['likes']} Likes'),
+              _iconTextButton(Icons.repeat, '${post['reposts']} Reposts'),
+              _iconTextButton(Icons.comment_outlined, '${post['comments']} Comments'),
+            ],
+          )
         ],
       ),
     );
   }
 
-  Widget _buildActionButton(IconData icon, String count, Color iconColor) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: iconColor.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, color: iconColor, size: 16),
-          const SizedBox(width: 4),
-          Text(
-            count,
-            style: TextStyle(
-              color: iconColor,
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      ),
+  Widget _iconTextButton(IconData icon, String label) {
+    return TextButton.icon(
+      onPressed: () {},
+      icon: Icon(icon, size: 18, color: Colors.grey),
+      label: Text(label, style: const TextStyle(color: Colors.grey)),
     );
   }
 } 

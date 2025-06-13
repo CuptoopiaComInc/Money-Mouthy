@@ -4,6 +4,8 @@ import '../widgets/app_logo.dart';
 import '../widgets/button.dart';
 import '../widgets/terms_and_conditions.dart';
 import '../widgets/page_title_with_indicator.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class ChooseUsernameScreen extends StatefulWidget {
   const ChooseUsernameScreen({Key? key}) : super(key: key);
@@ -31,27 +33,65 @@ class _ChooseUsernameScreenState extends State<ChooseUsernameScreen> {
   }
 
   void _checkUsernameAvailability() {
-    final username = _usernameController.text.trim();
-    if (username.isNotEmpty) {
+    final usernameRaw = _usernameController.text.trim();
+    if (usernameRaw.length < 3) {
+      if (_isUsernameAvailable || _isCheckingUsername) {
+        setState(() {
+          _isUsernameAvailable = false;
+          _isCheckingUsername = false;
+        });
+      }
+      return;
+    }
+    if (!_isCheckingUsername) {
       setState(() {
         _isCheckingUsername = true;
       });
+    }
+  }
 
-      // Simulate API call for username availability
-      Future.delayed(const Duration(milliseconds: 500), () {
-        if (mounted) {
-          setState(() {
-            _isCheckingUsername = false;
-            // For demo purposes, mark as available if length > 3
-            _isUsernameAvailable = username.length > 3;
-          });
-        }
+  Future<void> _submit() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+    final username = _usernameController.text.trim().toLowerCase();
+
+    // Final check before submission
+    try {
+      final doc = await FirebaseFirestore.instance.doc('usernames/$username').get();
+      if (doc.exists) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Username is already taken.'), backgroundColor: Colors.red));
+        setState(() {
+          _isUsernameAvailable = false;
+        });
+        return;
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Error verifying username. Please try again.'), backgroundColor: Colors.red));
+      return;
+    }
+
+    try {
+      await FirebaseFirestore.instance.runTransaction((txn) async {
+        final unameRef = FirebaseFirestore.instance.doc('usernames/$username');
+        txn.set(unameRef, {'uid': user.uid});
+        final userRef = FirebaseFirestore.instance.collection('users').doc(user.uid);
+        txn.set(userRef, {'username': username}, SetOptions(merge: true));
       });
-    } else {
-      setState(() {
-        _isUsernameAvailable = false;
-        _isCheckingUsername = false;
-      });
+      if (!mounted) return;
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const CreateProfileScreen()),
+      );
+    } catch (e) {
+      debugPrint('Saving username failed: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Failed to save username. It might have been taken.'),
+          backgroundColor: Colors.red));
     }
   }
 
@@ -68,9 +108,10 @@ class _ChooseUsernameScreenState extends State<ChooseUsernameScreen> {
         ),
       ),
       body: SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24.0),
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
               const SizedBox(height: 40),
               
@@ -201,7 +242,7 @@ class _ChooseUsernameScreenState extends State<ChooseUsernameScreen> {
               const Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
-                  'Your \$Username is unique, you can change it later.',
+                  'Your username is unique and cannot be changed later.',
                   style: TextStyle(
                     fontSize: 14,
                     color: Colors.grey,
@@ -213,16 +254,10 @@ class _ChooseUsernameScreenState extends State<ChooseUsernameScreen> {
               
               // Next button
               ElevatedButton(
-                onPressed: _isUsernameAvailable
-                    ? () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const CreateProfileScreen(),
-                          ),
-                        );
-                      }
-                    : null,
+                onPressed: () {
+                  // Re-check and submit
+                  _submit();
+                },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF5159FF),
                   foregroundColor: Colors.white,
@@ -235,14 +270,11 @@ class _ChooseUsernameScreenState extends State<ChooseUsernameScreen> {
                 ),
                 child: const Text(
                   'Next',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
               ),
               
-              const Spacer(),
+              const SizedBox(height: 32),
               
               // Terms and conditions
               Padding(

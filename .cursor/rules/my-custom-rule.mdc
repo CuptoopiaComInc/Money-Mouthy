@@ -1,0 +1,63 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+Technology Stack Overview
+
+🖥 Frontend / Application Layer
+
+Flutter 3.x (Dart): Single codebase supporting Android, iOS, Web, macOS, Windows, and Linux.
+
+UI Components: Built using Material 3 widgets and custom stateless/stateful widgets located in lib/screens and lib/widgets.
+
+☁️ Cloud Services (Firebase)
+
+Firebase Core: Initialized in main.dart.
+
+Firebase Authentication: Supports email/password sign-up, login, verification, and password reset workflows.
+
+Cloud Firestore: Used only for storing user profile documents at users/{uid}. Fields include:
+
+emailVerified, profileCompleted, lastLogin, username, etc.
+
+Firebase Storage: Not actively used yet; storage.rules are defined for future file/image uploads.
+
+💳 Payments (Stubbed)
+
+Stripe Integration: Uses flutter_stripe package. Keys are wired in, but API calls are currently stubbed.
+
+Backend Endpoint: A mock URL (https://your-backend.com/api) is present but not invoked.
+
+All payment/withdrawal operations simulate success locally.
+
+📦 Local Data Persistence (Client-side only)
+
+Wallet Ledger:
+
+Mobile/Desktop: Uses SQLite via sqflite package (wallet.db).
+
+Web: In-memory list persisted with SharedPreferences (as stringified JSON).
+
+Posts: Stored locally via SharedPreferences as a List<String> of JSON-encoded Post objects.
+
+Current Balance: Stored in SharedPreferences under key wallet_balance.
+
+Note: No remote database is used for posts or wallet yet.
+
+🛠 Tooling & DevOps
+
+Common packages: intl, flutter_stripe, cloud_firestore, firebase_auth, shared_preferences, sqflite, path, http.
+
+Native Android/iOS folders are included (generated via flutter create).
+
+Firebase security rules (firestore.rules, storage.rules) are included but not yet fully enforced.
+
+📊 Database Summary
+
+User Data: Stored in Firestore under the users collection.
+
+Posts & Wallet: Stored locally (SQLite or SharedPreferences, depending on platform).
+
+
+No centralized database for posts or wallet yet. Payment data is mocked and not persisted.

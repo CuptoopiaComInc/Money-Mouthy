@@ -1,10 +1,11 @@
-import 'package:flutter/cupertino.dart';
+import 'dart:io';
+import 'dart:typed_data';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
-import 'package:money_mouthy_two/screens/onboarding_complete.dart';
-import '../widgets/app_logo.dart';
-import '../widgets/button.dart';
-import '../widgets/terms_and_conditions.dart';
-import '../widgets/page_title_with_indicator.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
 class CreateProfileScreen extends StatefulWidget {
   const CreateProfileScreen({Key? key}) : super(key: key);
@@ -14,202 +15,143 @@ class CreateProfileScreen extends StatefulWidget {
 }
 
 class _CreateProfileScreenState extends State<CreateProfileScreen> {
-  bool _hasProfileImage = false;
+  final _nameController = TextEditingController();
+  final _bioController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+
+  XFile? _pickedFile;
+  Uint8List? _webImage;
+  bool _isLoading = false;
+
+  Future<void> _pickImage() async {
+    final picked = await ImagePicker().pickImage(source: ImageSource.gallery, maxWidth: 600, imageQuality: 80);
+    if (picked != null) {
+      if (kIsWeb) {
+        final bytes = await picked.readAsBytes();
+        setState(() {
+          _pickedFile = picked;
+          _webImage = bytes;
+        });
+      } else {
+        setState(() => _pickedFile = picked);
+      }
+    }
+  }
+
+  Future<void> _saveProfile() async {
+    if (!_formKey.currentState!.validate() || _isLoading) return;
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    setState(() => _isLoading = true);
+
+    String? imageUrl;
+    // Step 1: Upload image if selected
+    if (_pickedFile != null) {
+      try {
+        final ref = FirebaseStorage.instance.ref('user_uploads/${user.uid}/profile.jpg');
+        if (kIsWeb) {
+          if (_webImage == null) throw Exception("Image data not found for web.");
+          await ref.putData(_webImage!);
+        } else {
+          await ref.putFile(File(_pickedFile!.path));
+        }
+        imageUrl = await ref.getDownloadURL();
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Image upload failed: $e'), backgroundColor: Colors.red));
+          setState(() => _isLoading = false);
+        }
+        return; // Stop if upload fails
+      }
+    }
+
+    // Step 2: Save profile data to Firestore
+    try {
+      final data = {
+        'name': _nameController.text.trim(),
+        'bio': _bioController.text.trim(),
+        if (imageUrl != null) 'profileImageUrl': imageUrl,
+        'profileCompleted': true,
+        'updatedAt': FieldValue.serverTimestamp(),
+      };
+      await FirebaseFirestore.instance.collection('users').doc(user.uid).set(data, SetOptions(merge: true));
+
+      // Also update the FirebaseAuth user profile
+      await user.updateDisplayName(_nameController.text.trim());
+      if (imageUrl != null) await user.updatePhotoURL(imageUrl);
+
+      if (mounted) {
+        Navigator.pushReplacementNamed(context, '/home');
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to save profile: $e'), backgroundColor: Colors.red));
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _bioController.dispose();
+    super.dispose();
+  }
+
+  ImageProvider? _displayImage() {
+    if (_pickedFile != null) {
+      if (kIsWeb && _webImage != null) {
+        return MemoryImage(_webImage!);
+      } else if (!kIsWeb) {
+        return FileImage(File(_pickedFile!.path));
+      }
+    }
+    return null;
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 24.0),
-            child: TextButton(
-              onPressed: () {
-                // Handle skip logic here
-                Navigator.pushReplacementNamed(context, '/home');
-              },
-              child: const Text(
-                'Skip for Now',
-                style: TextStyle(
-                  color: Colors.grey,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0),
+      appBar: AppBar(title: const Text('Create Your Profile')),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
+        child: Form(
+          key: _formKey,
           child: Column(
             children: [
-              const SizedBox(height: 40),
-              
-              // Progress indicator
-              Container(
-                width: 120,
-                height: 4,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(2),
-                  color: Colors.grey.shade200,
-                ),
-                child: FractionallySizedBox(
-                  alignment: Alignment.centerLeft,
-                  widthFactor: 0.8, // 80% progress
-                  child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(2),
-                      color: const Color(0xFF5159FF),
-                    ),
-                  ),
-                ),
-              ),
-              
-              const SizedBox(height: 20),
-              
-              // Title
-              const Text(
-                'Create your profile',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
-                ),
-              ),
-              
-              const SizedBox(height: 20),
-              
-              // Subtitle
-              const Text(
-                'Make it easy for people to know its you\nby uploading your picture.',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey,
-                  height: 1.4,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              
-              const SizedBox(height: 80),
-              
-              // Profile image picker
               GestureDetector(
-                onTap: () {
-                  setState(() {
-                    _hasProfileImage = !_hasProfileImage;
-                  });
-                },
-                child: Container(
-                  width: 120,
-                  height: 120,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: _hasProfileImage ? null : Colors.grey.shade200,
-                    image: _hasProfileImage
-                        ? const DecorationImage(
-                            image: AssetImage('assets/images/profile_sample.png'),
-                            fit: BoxFit.cover,
-                          )
-                        : null,
-                  ),
-                  child: _hasProfileImage
-                      ? Stack(
-                          children: [
-                            Positioned(
-                              bottom: 0,
-                              right: 0,
-                              child: Container(
-                                width: 32,
-                                height: 32,
-                                decoration: const BoxDecoration(
-                                  color: Color(0xFF5159FF),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: const Icon(
-                                  Icons.check,
-                                  color: Colors.white,
-                                  size: 20,
-                                ),
-                              ),
-                            ),
-                          ],
-                        )
-                      : Icon(
-                          Icons.camera_alt,
-                          size: 40,
-                          color: Colors.grey.shade500,
-                        ),
+                onTap: _pickImage,
+                child: CircleAvatar(
+                  radius: 60,
+                  backgroundImage: _displayImage(),
+                  child: _displayImage() == null ? const Icon(Icons.camera_alt, size: 40, color: Colors.grey) : null,
                 ),
               ),
-              
-              const SizedBox(height: 80),
-              
-              // Next button
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const OnboardingCompleteScreen(),
-                    ),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF5159FF),
-                  foregroundColor: Colors.white,
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  minimumSize: const Size(double.infinity, 56),
-                ),
-                child: const Text(
-                  'Next',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
+              const SizedBox(height: 8),
+              const Text("Tap to add a profile picture", style: TextStyle(color: Colors.grey)),
+              const SizedBox(height: 24),
+              TextFormField(
+                controller: _nameController,
+                decoration: const InputDecoration(labelText: 'Your Name'),
+                validator: (v) => v == null || v.trim().isEmpty ? 'Please enter your name' : null,
               ),
-              
-              const Spacer(),
-              
-              // Terms and conditions
-              Padding(
-                padding: const EdgeInsets.only(bottom: 40),
-                child: RichText(
-                  textAlign: TextAlign.center,
-                  text: TextSpan(
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey.shade600,
-                    ),
-                    children: const [
-                      TextSpan(
-                        text: "By signing up you agree to Money Mouthy's ",
-                      ),
-                      TextSpan(
-                        text: "terms and conditions",
-                        style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          color: Colors.black,
-                        ),
-                      ),
-                      TextSpan(
-                        text: ".",
-                      ),
-                    ],
-                  ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _bioController,
+                decoration: const InputDecoration(labelText: 'Bio (optional)'),
+                maxLines: 3,
+              ),
+              const SizedBox(height: 32),
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: ElevatedButton(
+                  onPressed: _isLoading ? null : _saveProfile,
+                  child: _isLoading ? const CircularProgressIndicator(color: Colors.white) : const Text('Finish'),
                 ),
               ),
             ],
