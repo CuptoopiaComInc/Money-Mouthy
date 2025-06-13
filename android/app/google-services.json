@@ -1,26 +1,36 @@
 {
   "project_info": {
-    "project_number": "929444955347",
-    "project_id": "money-mouthy-fb",
-    "storage_bucket": "money-mouthy-fb.firebasestorage.app"
+    "project_number": "717677160958",
+    "project_id": "money-mouthy",
+    "storage_bucket": "money-mouthy.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:929444955347:android:a8d2475569df1f807f0026",
+        "mobilesdk_app_id": "1:717677160958:android:f5bc9db3c362da16a738af",
         "android_client_info": {
-          "package_name": "com.example.money_mouthy_two"
+          "package_name": "com.moneymouthy.app"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "717677160958-tn5m4p7c0quvl6g8nulnnivemvar5o93.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
-          "current_key": "AIzaSyALhiH9No-1eyjyf4L9Rwi--ztrU7tzLsY"
+          "current_key": "AIzaSyC1ydzTXfkhy-dCry83jPtIqDbUrcWx2Ow"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "717677160958-tn5m4p7c0quvl6g8nulnnivemvar5o93.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

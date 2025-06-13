@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:money_mouthy_two/screens/password_reset_code.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:money_mouthy_two/screens/reset_password_success.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({Key? key}) : super(key: key);
@@ -21,6 +22,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   Future<void> _sendResetEmail() async {
     final email = _emailController.text.trim();
     if (email.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter your email address'),
+          backgroundColor: Colors.red,
+        ),
+      );
       return;
     }
 
@@ -28,20 +35,30 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       _isLoading = true;
     });
 
-    // Simulate sending reset email
-    await Future.delayed(const Duration(seconds: 2));
+    try {
+      await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
 
-    if (mounted) {
-      setState(() {
-        _isLoading = false;
-      });
-      
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => PasswordResetCodeScreen(email: email),
-        ),
-      );
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const ResetPasswordSuccessScreen(),
+          ),
+        );
+      }
+    } on FirebaseAuthException catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.message ?? 'Failed to send reset email')),
+        );
+      }
     }
   }
 

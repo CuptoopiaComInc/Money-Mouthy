@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:money_mouthy_two/screens/otp_verification.dart';
 import '../widgets/app_logo.dart';
 import '../widgets/button.dart';
 import '../widgets/terms_and_conditions.dart';
 import '../widgets/page_title_with_indicator.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 
 class CreateAccountScreen extends StatefulWidget {
   const CreateAccountScreen({Key? key}) : super(key: key);
@@ -42,23 +42,110 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
       _isLoading = true;
     });
 
-    // Simulate account creation for testing
-    await Future.delayed(const Duration(seconds: 2));
-
-    if (mounted) {
-      setState(() {
-        _isLoading = false;
-      });
-      
-      // Navigate to OTP verification screen
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => OtpVerificationScreen(
-            email: _emailController.text.trim(),
-          ),
-        ),
+    try {
+      // Create user with Firebase
+      final credential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
       );
+
+      final user = credential.user;
+      if (user == null) {
+        throw FirebaseAuthException(
+          code: 'user-creation-failed',
+          message: 'Failed to create user account',
+        );
+      }
+
+      // Update display name
+      await user.updateDisplayName(_nameController.text.trim());
+
+      // Send verification email first
+      try {
+        await user.sendEmailVerification();
+      } catch (e) {
+        // If email verification fails, delete the user and report
+        await user.delete();
+        throw FirebaseAuthException(
+          code: 'email-verification-failed',
+          message: 'Failed to send verification email. Please try again.',
+        );
+      }
+
+      // Attempt to save basic user information in Firestore (optional)
+      try {
+        await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+          'name': _nameController.text.trim(),
+          'email': _emailController.text.trim(),
+          'emailVerified': false,
+          'createdAt': FieldValue.serverTimestamp(),
+        });
+      } catch (e) {
+        // Log error but keep the account; Firestore write failure shouldn't block sign-up
+        debugPrint('Failed to save user data: $e');
+      }
+
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+
+        // Show success message
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Registration successful! Please check your email for verification link.'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 5),
+          ),
+        );
+
+        // Sign out and return to login
+        await FirebaseAuth.instance.signOut();
+        if (mounted) {
+          Navigator.pushReplacementNamed(context, '/login');
+        }
+      }
+    } on FirebaseAuthException catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+        String errorMessage = 'Registration failed';
+        switch (e.code) {
+          case 'email-already-in-use':
+            errorMessage = 'This email is already registered. Please login instead.';
+            break;
+          case 'invalid-email':
+            errorMessage = 'Please enter a valid email address.';
+            break;
+          case 'weak-password':
+            errorMessage = 'Password is too weak. Please use a stronger password.';
+            break;
+          case 'email-verification-failed':
+            errorMessage = e.message ?? 'Failed to send verification email. Please try again.';
+            break;
+          default:
+            errorMessage = e.message ?? 'Registration failed. Please try again.';
+        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(errorMessage),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('An unexpected error occurred. Please try again.'),
+            backgroundColor: Colors.red,
+                ),
+              );
+      }
     }
   }
 
@@ -136,19 +223,19 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                         color: Colors.grey,
                         fontWeight: FontWeight.w500,
                       ),
-                    ),
+                ),
                     const SizedBox(height: 8),
-                    TextFormField(
-                      controller: _nameController,
-                      decoration: InputDecoration(
+                TextFormField(
+                  controller: _nameController,
+                  decoration: InputDecoration(
                         hintText: 'Enter your full name',
                         hintStyle: const TextStyle(
                           color: Colors.grey,
                           fontSize: 16,
-                        ),
-                        filled: true,
+                    ),
+                    filled: true,
                         fillColor: Colors.grey[50],
-                        border: OutlineInputBorder(
+                    border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide(color: Colors.grey.shade300),
                         ),
@@ -159,20 +246,20 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: const BorderSide(color: Color(0xFF5159FF), width: 2),
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
                           horizontal: 16,
                           vertical: 16,
-                        ),
-                      ),
-                      style: const TextStyle(fontSize: 16),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter your name';
-                        }
-                        return null;
-                      },
                     ),
+                  ),
+                      style: const TextStyle(fontSize: 16),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter your name';
+                    }
+                    return null;
+                  },
+                ),
                   ],
                 ),
                 
@@ -191,18 +278,18 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    TextFormField(
-                      controller: _emailController,
-                      keyboardType: TextInputType.emailAddress,
-                      decoration: InputDecoration(
+                TextFormField(
+                  controller: _emailController,
+                  keyboardType: TextInputType.emailAddress,
+                  decoration: InputDecoration(
                         hintText: 'Enter your email address',
                         hintStyle: const TextStyle(
                           color: Colors.grey,
                           fontSize: 16,
-                        ),
-                        filled: true,
+                    ),
+                    filled: true,
                         fillColor: Colors.grey[50],
-                        border: OutlineInputBorder(
+                    border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide(color: Colors.grey.shade300),
                         ),
@@ -213,23 +300,23 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: const BorderSide(color: Color(0xFF5159FF), width: 2),
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
                           horizontal: 16,
                           vertical: 16,
-                        ),
-                      ),
-                      style: const TextStyle(fontSize: 16),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter your email';
-                        }
-                        if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-                          return 'Please enter a valid email';
-                        }
-                        return null;
-                      },
                     ),
+                  ),
+                      style: const TextStyle(fontSize: 16),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter your email';
+                    }
+                    if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+                      return 'Please enter a valid email';
+                    }
+                    return null;
+                  },
+                ),
                   ],
                 ),
                 
@@ -248,18 +335,18 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    TextFormField(
-                      controller: _passwordController,
-                      obscureText: _obscurePassword,
-                      decoration: InputDecoration(
+                TextFormField(
+                  controller: _passwordController,
+                  obscureText: _obscurePassword,
+                  decoration: InputDecoration(
                         hintText: 'Create a password',
                         hintStyle: const TextStyle(
                           color: Colors.grey,
                           fontSize: 16,
-                        ),
-                        filled: true,
+                    ),
+                    filled: true,
                         fillColor: Colors.grey[50],
-                        border: OutlineInputBorder(
+                    border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide(color: Colors.grey.shade300),
                         ),
@@ -270,34 +357,34 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: const BorderSide(color: Color(0xFF5159FF), width: 2),
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
                           horizontal: 16,
                           vertical: 16,
-                        ),
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            _obscurePassword ? Icons.visibility_off : Icons.visibility,
-                            color: Colors.grey,
-                          ),
-                          onPressed: () {
-                            setState(() {
-                              _obscurePassword = !_obscurePassword;
-                            });
-                          },
-                        ),
+                    ),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                        color: Colors.grey,
                       ),
-                      style: const TextStyle(fontSize: 16),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter your password';
-                        }
-                        if (value.length < 6) {
-                          return 'Password must be at least 6 characters';
-                        }
-                        return null;
+                      onPressed: () {
+                        setState(() {
+                          _obscurePassword = !_obscurePassword;
+                        });
                       },
                     ),
+                  ),
+                      style: const TextStyle(fontSize: 16),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                          return 'Please enter your password';
+                    }
+                    if (value.length < 6) {
+                      return 'Password must be at least 6 characters';
+                    }
+                    return null;
+                  },
+                ),
                   ],
                 ),
                 
@@ -316,18 +403,18 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    TextFormField(
-                      controller: _confirmPasswordController,
-                      obscureText: _obscureConfirmPassword,
-                      decoration: InputDecoration(
+                TextFormField(
+                  controller: _confirmPasswordController,
+                  obscureText: _obscureConfirmPassword,
+                  decoration: InputDecoration(
                         hintText: 'Confirm your password',
                         hintStyle: const TextStyle(
                           color: Colors.grey,
                           fontSize: 16,
-                        ),
-                        filled: true,
+                    ),
+                    filled: true,
                         fillColor: Colors.grey[50],
-                        border: OutlineInputBorder(
+                    border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide(color: Colors.grey.shade300),
                         ),
@@ -338,34 +425,34 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: const BorderSide(color: Color(0xFF5159FF), width: 2),
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
                           horizontal: 16,
                           vertical: 16,
-                        ),
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            _obscureConfirmPassword ? Icons.visibility_off : Icons.visibility,
-                            color: Colors.grey,
-                          ),
-                          onPressed: () {
-                            setState(() {
-                              _obscureConfirmPassword = !_obscureConfirmPassword;
-                            });
-                          },
-                        ),
+                    ),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscureConfirmPassword ? Icons.visibility_off : Icons.visibility,
+                        color: Colors.grey,
                       ),
-                      style: const TextStyle(fontSize: 16),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please confirm your password';
-                        }
-                        if (value != _passwordController.text) {
-                          return 'Passwords do not match';
-                        }
-                        return null;
+                      onPressed: () {
+                        setState(() {
+                          _obscureConfirmPassword = !_obscureConfirmPassword;
+                        });
                       },
                     ),
+                  ),
+                      style: const TextStyle(fontSize: 16),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please confirm your password';
+                    }
+                    if (value != _passwordController.text) {
+                      return 'Passwords do not match';
+                    }
+                    return null;
+                  },
+                ),
                   ],
                 ),
                 

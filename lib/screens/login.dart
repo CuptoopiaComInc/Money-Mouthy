@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:money_mouthy_two/screens/otp_verification.dart';
 import 'package:money_mouthy_two/screens/sign_up.dart';
 import 'package:money_mouthy_two/screens/forgot_password.dart';
 import 'package:money_mouthy_two/widgets/app_logo.dart';
+import 'package:flutter/foundation.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -19,7 +20,9 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isLoading = false;
   bool _showPasswordField = false;
   String? _errorMessage;
-  final _formKey = GlobalKey<FormState>();
+
+  // Add FirebaseAuth instance for convenience
+  final FirebaseAuth _auth = FirebaseAuth.instance;
 
   @override
   void dispose() {
@@ -52,9 +55,9 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _login() async {
-    if (_passwordController.text.isEmpty) {
+    if (_emailController.text.trim().isEmpty || _passwordController.text.trim().isEmpty) {
       setState(() {
-        _errorMessage = 'Please enter your password';
+        _errorMessage = 'Please enter both email and password';
       });
       return;
     }
@@ -64,24 +67,80 @@ class _LoginScreenState extends State<LoginScreen> {
       _errorMessage = null;
     });
 
-    // Simulate login
-    await Future.delayed(const Duration(seconds: 2));
+    try {
+      final credential = await _auth.signInWithEmailAndPassword(
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
+      );
+
+      // Reload user to get the latest emailVerified flag
+      await credential.user?.reload();
+      final user = _auth.currentUser;
+
+      if (user == null) {
+        throw FirebaseAuthException(
+          code: 'user-not-found',
+          message: 'User account not found',
+        );
+      }
+
+      if (!user.emailVerified) {
+        // Send a new verification email
+        await user.sendEmailVerification();
+        await _auth.signOut();
+        
+        setState(() {
+          _errorMessage = 'Please verify your email first. A new verification link has been sent to your email.';
+        });
+        return;
+      }
+
+      // Update Firestore emailVerified status (create doc if missing)
+      try {
+        await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+          'emailVerified': true,
+          'lastLogin': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true));
+      } catch (e) {
+        // Log but don't block login if Firestore write fails
+        debugPrint('Unable to update user doc after login: $e');
+      }
 
     if (mounted) {
+        Navigator.pushReplacementNamed(context, '/home');
+      }
+    } on FirebaseAuthException catch (e) {
+      String errorMessage;
+      switch (e.code) {
+        case 'user-not-found':
+          errorMessage = 'No account found with this email. Please sign up first.';
+          break;
+        case 'wrong-password':
+        case 'invalid-credential':
+          errorMessage = 'Incorrect email or password. Please try again.';
+          break;
+        case 'invalid-email':
+          errorMessage = 'Please enter a valid email address.';
+          break;
+        case 'user-disabled':
+          errorMessage = 'This account has been disabled. Please contact support.';
+          break;
+        default:
+          errorMessage = e.message ?? 'Login failed. Please try again.';
+      }
       setState(() {
+        _errorMessage = errorMessage;
+      });
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'An unexpected error occurred. Please try again.';
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
         _isLoading = false;
       });
-      
-      // Navigate to OTP verification screen
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => OtpVerificationScreen(
-            email: _emailController.text.trim(),
-            isLogin: true,
-          ),
-        ),
-      );
+      }
     }
   }
 
@@ -98,7 +157,7 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
       ),
       body: SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24.0),
           child: Column(
             children: [
@@ -420,7 +479,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
               
-              const Spacer(),
+              const SizedBox(height: 32),
               
               // Terms and conditions
               Padding(

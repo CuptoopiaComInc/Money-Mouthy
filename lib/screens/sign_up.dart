@@ -12,7 +12,7 @@ class SignUpScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24.0),
           child: Column(
             children: [
@@ -160,10 +160,10 @@ class SignUpScreen extends StatelessWidget {
                 ),
               ),
               
-              const Spacer(),
+              const SizedBox(height: 40),
               
               // Terms and conditions
-              Container(
+              Padding(
                 padding: const EdgeInsets.only(bottom: 40),
                 child: RichText(
                   textAlign: TextAlign.center,

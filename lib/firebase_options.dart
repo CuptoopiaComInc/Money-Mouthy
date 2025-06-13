@@ -41,46 +41,46 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyBMTbj3qSMJqql3_9YxifPmymKa1mAGQRw',
-    appId: '1:929444955347:web:d3ee37d2aeaa2c967f0026',
-    messagingSenderId: '929444955347',
-    projectId: 'money-mouthy-fb',
-    authDomain: 'money-mouthy-fb.firebaseapp.com',
-    storageBucket: 'money-mouthy-fb.firebasestorage.app',
+    apiKey: 'AIzaSyD_lcbaRg1tNGkh0Gjo4fzphQBVqqTJ0PM',
+    appId: '1:717677160958:web:f5bc9db3c362da16a738af',
+    messagingSenderId: '717677160958',
+    projectId: 'money-mouthy',
+    authDomain: 'money-mouthy.firebaseapp.com',
+    storageBucket: 'money-mouthy.appspot.com',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyALhiH9No-1eyjyf4L9Rwi--ztrU7tzLsY',
-    appId: '1:929444955347:android:a8d2475569df1f807f0026',
-    messagingSenderId: '929444955347',
-    projectId: 'money-mouthy-fb',
-    storageBucket: 'money-mouthy-fb.firebasestorage.app',
+    apiKey: 'AIzaSyC1ydzTXfkhy-dCry83jPtIqDbUrcWx2Ow',
+    appId: '1:717677160958:android:f5bc9db3c362da16a738af',
+    messagingSenderId: '717677160958',
+    projectId: 'money-mouthy',
+    storageBucket: 'money-mouthy.appspot.com',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyAxN6KL34PBaKSgPJMaSWTg8ELyFlAb0qE',
-    appId: '1:929444955347:ios:194d5f4fee0b58647f0026',
-    messagingSenderId: '929444955347',
-    projectId: 'money-mouthy-fb',
-    storageBucket: 'money-mouthy-fb.firebasestorage.app',
-    iosBundleId: 'com.example.moneyMouthyTwo',
+    apiKey: 'AIzaSyD_lcbaRg1tNGkh0Gjo4fzphQBVqqTJ0PM',
+    appId: '1:717677160958:ios:f5bc9db3c362da16a738af',
+    messagingSenderId: '717677160958',
+    projectId: 'money-mouthy',
+    storageBucket: 'money-mouthy.appspot.com',
+    iosBundleId: 'com.moneymouthy.app',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyAxN6KL34PBaKSgPJMaSWTg8ELyFlAb0qE',
-    appId: '1:929444955347:ios:194d5f4fee0b58647f0026',
-    messagingSenderId: '929444955347',
-    projectId: 'money-mouthy-fb',
-    storageBucket: 'money-mouthy-fb.firebasestorage.app',
-    iosBundleId: 'com.example.moneyMouthyTwo',
+    apiKey: 'AIzaSyD_lcbaRg1tNGkh0Gjo4fzphQBVqqTJ0PM',
+    appId: '1:717677160958:ios:f5bc9db3c362da16a738af',
+    messagingSenderId: '717677160958',
+    projectId: 'money-mouthy',
+    storageBucket: 'money-mouthy.appspot.com',
+    iosBundleId: 'com.moneymouthy.app',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'AIzaSyBMTbj3qSMJqql3_9YxifPmymKa1mAGQRw',
-    appId: '1:929444955347:web:e52e2a470e2082287f0026',
-    messagingSenderId: '929444955347',
-    projectId: 'money-mouthy-fb',
-    authDomain: 'money-mouthy-fb.firebaseapp.com',
-    storageBucket: 'money-mouthy-fb.firebasestorage.app',
+    apiKey: 'AIzaSyD_lcbaRg1tNGkh0Gjo4fzphQBVqqTJ0PM',
+    appId: '1:717677160958:web:f5bc9db3c362da16a738af',
+    messagingSenderId: '717677160958',
+    projectId: 'money-mouthy',
+    authDomain: 'money-mouthy.firebaseapp.com',
+    storageBucket: 'money-mouthy.appspot.com',
   );
 }
