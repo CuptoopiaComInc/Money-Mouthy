@@ -97,7 +97,7 @@ class _WalletScreenState extends State<WalletScreen> with SingleTickerProviderSt
                           Expanded(
                             child: _buildQuickActionButton(
                               icon: Icons.add,
-                              label: 'Add Funds',
+                              label: 'ReUp!',
                               onTap: _showAddFundsDialog,
                             ),
                           ),
@@ -388,7 +388,7 @@ class _AddFundsDialogState extends State<AddFundsDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text('Add Funds'),
+      title: Text('ReUp!'),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -461,7 +461,7 @@ class _AddFundsDialogState extends State<AddFundsDialog> {
                   height: 20,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
-              : Text('Add Funds'),
+                                : Text('ReUp!'),
         ),
       ],
     );

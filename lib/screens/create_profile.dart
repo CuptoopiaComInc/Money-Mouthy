@@ -24,70 +24,109 @@ class _CreateProfileScreenState extends State<CreateProfileScreen> {
   bool _isLoading = false;
 
   Future<void> _pickImage() async {
-    final picked = await ImagePicker().pickImage(source: ImageSource.gallery, maxWidth: 600, imageQuality: 80);
+    // Compress image and set max width to reduce file size.
+    final picked = await ImagePicker().pickImage(source: ImageSource.gallery, maxWidth: 800, imageQuality: 85);
     if (picked != null) {
+      // Validate file size before proceeding
+      final fileSize = await picked.length();
+      if (fileSize > 5 * 1024 * 1024) { // 5 MB limit
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Selected image is too large (max 5MB).'), backgroundColor: Colors.red));
+        return;
+      }
+
       if (kIsWeb) {
         final bytes = await picked.readAsBytes();
+        if (!mounted) return;
         setState(() {
           _pickedFile = picked;
           _webImage = bytes;
         });
       } else {
+        if (!mounted) return;
         setState(() => _pickedFile = picked);
       }
     }
   }
 
+  /// Uploads the selected image to Firebase Storage and returns the download URL.
+  /// Throws an exception if the upload fails.
+  Future<String> _uploadProfileImage(String userId, File imageFile) async {
+    // For web, a different method would be needed to handle XFile -> bytes
+    final ref = FirebaseStorage.instance.ref('profile_images/$userId.jpg');
+    
+    debugPrint('Starting image upload to ${ref.fullPath}...');
+    
+    final uploadTask = ref.putFile(imageFile);
+
+    // Listen for progress
+    uploadTask.snapshotEvents.listen((TaskSnapshot snapshot) {
+      final progress = 100.0 * (snapshot.bytesTransferred / snapshot.totalBytes);
+      debugPrint('Upload progress: ${progress.toStringAsFixed(2)}%');
+    });
+
+    // Await completion with a timeout
+    final snapshot = await uploadTask.timeout(const Duration(seconds: 60));
+    final downloadUrl = await snapshot.ref.getDownloadURL();
+    
+    debugPrint('Upload successful. URL: $downloadUrl');
+    return downloadUrl;
+  }
+
   Future<void> _saveProfile() async {
     if (!_formKey.currentState!.validate() || _isLoading) return;
+
     final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return;
+    if (user == null) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Authentication error. Please sign in again.'),
+        backgroundColor: Colors.red,
+      ));
+      return;
+    }
 
     setState(() => _isLoading = true);
 
-    String? imageUrl;
-    // Step 1: Upload image if selected
-    if (_pickedFile != null) {
-      try {
-        final ref = FirebaseStorage.instance.ref('user_uploads/${user.uid}/profile.jpg');
-        if (kIsWeb) {
-          if (_webImage == null) throw Exception("Image data not found for web.");
-          await ref.putData(_webImage!);
-        } else {
-          await ref.putFile(File(_pickedFile!.path));
-        }
-        imageUrl = await ref.getDownloadURL();
-      } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Image upload failed: $e'), backgroundColor: Colors.red));
-          setState(() => _isLoading = false);
-        }
-        return; // Stop if upload fails
-      }
-    }
-
-    // Step 2: Save profile data to Firestore
     try {
-      final data = {
+      String? imageUrl;
+      if (_pickedFile != null) {
+        // This function will now throw an error on failure, which will be caught below.
+        imageUrl = await _uploadProfileImage(user.uid, File(_pickedFile!.path));
+      }
+
+      final userData = {
         'name': _nameController.text.trim(),
         'bio': _bioController.text.trim(),
-        if (imageUrl != null) 'profileImageUrl': imageUrl,
         'profileCompleted': true,
         'updatedAt': FieldValue.serverTimestamp(),
+        if (imageUrl != null) 'photoUrl': imageUrl,
       };
-      await FirebaseFirestore.instance.collection('users').doc(user.uid).set(data, SetOptions(merge: true));
 
-      // Also update the FirebaseAuth user profile
+      debugPrint('Saving user data to Firestore...');
+      await FirebaseFirestore.instance.collection('users').doc(user.uid).set(userData, SetOptions(merge: true));
+
+      debugPrint('Updating FirebaseAuth profile...');
       await user.updateDisplayName(_nameController.text.trim());
-      if (imageUrl != null) await user.updatePhotoURL(imageUrl);
+      if (imageUrl != null) {
+        await user.updatePhotoURL(imageUrl);
+      }
+      
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Profile saved successfully!'),
+        backgroundColor: Colors.green,
+      ));
+      Navigator.pushReplacementNamed(context, '/home');
 
-      if (mounted) {
-        Navigator.pushReplacementNamed(context, '/home');
-      }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to save profile: $e'), backgroundColor: Colors.red));
-      }
+      // This will now catch errors from _uploadProfileImage as well.
+      debugPrint('** An error occurred during save process: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('An error occurred: $e'),
+        backgroundColor: Colors.red,
+      ));
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);

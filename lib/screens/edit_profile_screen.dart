@@ -17,6 +17,8 @@ class EditProfileScreen extends StatefulWidget {
 class _EditProfileScreenState extends State<EditProfileScreen> {
   final User? _user = FirebaseAuth.instance.currentUser;
   final _nameController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+
   XFile? _pickedFile;
   String? _profileImageUrl;
   bool _isSaving = false;
@@ -28,16 +30,31 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _loadUserData();
   }
 
+  @override
+  void dispose() {
+    _nameController.dispose();
+    super.dispose();
+  }
+
   Future<void> _loadUserData() async {
     if (_user == null) return;
-    final userDoc = await FirebaseFirestore.instance.collection('users').doc(_user!.uid).get();
-    if (userDoc.exists) {
-      final data = userDoc.data();
+    try {
+      final userDoc = await FirebaseFirestore.instance.collection('users').doc(_user!.uid).get();
+      if (userDoc.exists) {
+        final data = userDoc.data();
+        if (mounted) {
+          setState(() {
+            _nameController.text = data?['username'] ?? _user?.displayName ?? '';
+            _profileImageUrl = data?['profileImageUrl'];
+          });
+        }
+      }
+    } catch (e) {
       if (mounted) {
-        setState(() {
-          _nameController.text = data?['name'] ?? _user?.displayName ?? '';
-          _profileImageUrl = data?['profileImageUrl'];
-        });
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('Failed to load user data: $e'),
+          backgroundColor: Colors.red,
+        ));
       }
     }
   }
@@ -45,12 +62,25 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   Future<void> _pickImage() async {
     if (_isSaving) return;
     final pickedFile = await ImagePicker().pickImage(source: ImageSource.gallery, imageQuality: 80, maxWidth: 800);
+    
     if (pickedFile != null) {
+      // File size check (5MB limit)
+      final fileLength = await pickedFile.length();
+      if (fileLength > 5 * 1024 * 1024) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('Image is too large. Please select a file under 5MB.'),
+            backgroundColor: Colors.red,
+          ));
+        }
+        return;
+      }
+
       if (kIsWeb) {
-        final f = await pickedFile.readAsBytes();
+        final bytes = await pickedFile.readAsBytes();
         setState(() {
           _pickedFile = pickedFile;
-          _webImage = f;
+          _webImage = bytes;
         });
       } else {
         setState(() {
@@ -60,51 +90,56 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     }
   }
 
-  Future<void> _saveProfile() async {
-    if (_user == null || _nameController.text.trim().isEmpty || _isSaving) return;
-
-    setState(() => _isSaving = true);
-
-    String? imageUrl;
-
-    // Step 1: Handle File Upload if an image was picked.
-    if (_pickedFile != null) {
-      try {
-        final ref = FirebaseStorage.instance.ref().child('user_uploads').child(_user!.uid).child('profile.jpg');
-        
-        if (kIsWeb) {
-          if (_webImage == null) throw Exception("Image data could not be read.");
-          await ref.putData(_webImage!);
-        } else {
-          await ref.putFile(File(_pickedFile!.path));
-        }
-        imageUrl = await ref.getDownloadURL();
-      } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text('Error uploading image: $e'),
-            backgroundColor: Colors.red,
-          ));
-          setState(() => _isSaving = false);
-        }
-        return; // Stop the process if image upload fails.
-      }
+  Future<String?> _uploadImage() async {
+    if (_pickedFile == null) return null;
+    if (_user == null) {
+      throw Exception('User is not logged in.');
     }
 
-    // Step 2: Update Firestore with the new data.
+    final ref = FirebaseStorage.instance.ref().child('user_uploads').child(_user!.uid).child('profile.jpg');
+
     try {
+      if (kIsWeb) {
+        if (_webImage == null) throw Exception("Image data is not available for web.");
+        // Add a 60-second timeout
+        await ref.putData(_webImage!).timeout(const Duration(seconds: 60));
+      } else {
+        // Add a 60-second timeout
+        await ref.putFile(File(_pickedFile!.path)).timeout(const Duration(seconds: 60));
+      }
+      return await ref.getDownloadURL();
+    } catch (e) {
+      throw Exception('Error uploading image: $e');
+    }
+  }
+
+  Future<void> _saveProfile() async {
+    if (!_formKey.currentState!.validate() || _isSaving) {
+      return;
+    }
+    
+    setState(() => _isSaving = true);
+    
+    try {
+      String? newImageUrl = await _uploadImage();
+
       final Map<String, dynamic> dataToUpdate = {
-        'name': _nameController.text.trim(),
+        'username': _nameController.text.trim(),
       };
       
-      if (imageUrl != null) {
-        dataToUpdate['profileImageUrl'] = imageUrl;
+      if (newImageUrl != null) {
+        dataToUpdate['profileImageUrl'] = newImageUrl;
       }
 
       await FirebaseFirestore.instance.collection('users').doc(_user!.uid).set(
         dataToUpdate,
         SetOptions(merge: true),
       );
+      
+      await _user?.updateDisplayName(_nameController.text.trim());
+      if (newImageUrl != null) {
+        await _user?.updatePhotoURL(newImageUrl);
+      }
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
@@ -116,7 +151,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('Failed to save profile: $e'),
+          content: Text('Failed to save profile: ${e.toString()}'),
           backgroundColor: Colors.red,
         ));
       }
@@ -133,59 +168,102 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       appBar: AppBar(
         title: const Text('Edit Profile'),
         actions: [
-          if (_isSaving)
-            const Padding(
-              padding: EdgeInsets.only(right: 16.0),
-              child: Center(child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white)))),
-          if (!_isSaving)
-            IconButton(
-              icon: const Icon(Icons.save),
-              onPressed: _saveProfile,
-            )
+          IconButton(
+            icon: _isSaving ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.0)) : const Icon(Icons.save),
+            onPressed: _isSaving ? null : _saveProfile,
+            tooltip: 'Save Profile',
+          )
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            GestureDetector(
-              onTap: _pickImage,
-              child: CircleAvatar(
-                radius: 60,
-                backgroundImage: _displayImage(),
-                child: _displayImage() == null
-                    ? const Icon(Icons.camera_alt, size: 50)
-                    : null,
+      body: Form(
+        key: _formKey,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              _buildAvatar(),
+              const SizedBox(height: 12),
+              Text(
+                'Tap the image to change your avatar',
+                style: Theme.of(context).textTheme.bodySmall,
               ),
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'Tap on the image to choose a new profile picture.',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.grey),
-            ),
-            const SizedBox(height: 32),
-            TextField(
-              controller: _nameController,
-              decoration: const InputDecoration(
-                labelText: 'Display Name',
-                border: OutlineInputBorder(),
+              const SizedBox(height: 32),
+              TextFormField(
+                controller: _nameController,
+                decoration: const InputDecoration(
+                  labelText: 'Username',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.person_outline),
+                ),
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return 'Username cannot be empty';
+                  }
+                  if (value.length < 3) {
+                    return 'Username must be at least 3 characters long';
+                  }
+                  return null;
+                },
               ),
-            ),
-            const SizedBox(height: 20),
-            if (_isSaving)
-              const Center(child: CircularProgressIndicator())
-            else
-              ElevatedButton.icon(
-                onPressed: _saveProfile,
-                icon: const Icon(Icons.save),
-                label: const Text('Save Profile'),
+              const SizedBox(height: 32),
+              ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   minimumSize: const Size(double.infinity, 50),
+                  textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
+                onPressed: _isSaving ? null : _saveProfile,
+                child: _isSaving
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2.0,
+                        ),
+                      )
+                    : const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.save, size: 20),
+                          SizedBox(width: 10),
+                          Text('Save Profile'),
+                        ],
+                      ),
               ),
-          ],
+            ],
+          ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildAvatar() {
+    return GestureDetector(
+      onTap: _pickImage,
+      child: Stack(
+        children: [
+          CircleAvatar(
+            radius: 60,
+            backgroundColor: Colors.grey.shade200,
+            backgroundImage: _displayImage(),
+            child: _displayImage() == null
+                ? Icon(Icons.person, size: 60, color: Colors.grey.shade400)
+                : null,
+          ),
+          Positioned(
+            bottom: 0,
+            right: 0,
+            child: Container(
+              padding: const EdgeInsets.all(6),
+              decoration: const BoxDecoration(
+                color: Colors.blue,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.camera_alt, color: Colors.white, size: 20),
+            ),
+          ),
+        ],
       ),
     );
   }

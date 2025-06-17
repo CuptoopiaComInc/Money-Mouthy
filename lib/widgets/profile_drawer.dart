@@ -65,8 +65,13 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Drawer(child: Center(child: CircularProgressIndicator()));
+      return const Drawer(
+        child: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
     }
+
     if (_user == null || _userDoc == null || !_userDoc!.exists) {
       return Drawer(
         child: Center(
@@ -92,170 +97,343 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
     final profileImageUrl = userData['profileImageUrl'];
 
     return Drawer(
-      child: ListView(
-        padding: const EdgeInsets.all(16.0),
+      backgroundColor: Colors.grey.shade50,
+      child: Column(
         children: [
-          _buildProfileHeader(username, profileImageUrl),
-          const SizedBox(height: 20),
-          _buildFundAccount(context),
-          const SizedBox(height: 20),
-          _buildIncreasePostAmount(),
-          const SizedBox(height: 30),
-          _buildNavigationButton(
-            'Explore Categories',
-            Icons.category,
-            () {
-              Navigator.of(context).push(MaterialPageRoute(builder: (_) => const CategoriesRankingScreen()));
-            },
+          // Header Section with light purple background
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.fromLTRB(20, 50, 20, 25),
+            decoration: const BoxDecoration(
+              color: Color(0xFFE8E3FF), // Light purple/lavender background
+              borderRadius: BorderRadius.only(
+                bottomLeft: Radius.circular(20),
+                bottomRight: Radius.circular(20),
+              ),
+            ),
+            child: Row(
+              children: [
+                // Profile avatar with edit icon
+                GestureDetector(
+                  onTap: () {
+                    Navigator.of(context).push(MaterialPageRoute(builder: (_) => const EditProfileScreen()));
+                  },
+                  child: Stack(
+                    children: [
+                      CircleAvatar(
+                        radius: 30,
+                        backgroundColor: Colors.grey.shade300,
+                        backgroundImage: profileImageUrl != null ? NetworkImage(profileImageUrl) : null,
+                        child: profileImageUrl == null
+                            ? const Icon(Icons.person, size: 30, color: Colors.white)
+                            : null,
+                      ),
+                      Positioned(
+                        bottom: 0,
+                        right: 0,
+                        child: Container(
+                          width: 20,
+                          height: 20,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFF5159FF),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.edit,
+                            size: 12,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                // Username and stats
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        username,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      const Text(
+                        '10 Posts  100 Follows',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.black54,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: 10),
-          _buildNavigationButton(
-            'Connect with others',
-            Icons.people,
-            () {
-              Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ConnectScreen()));
-            },
+          
+          // Main content - scrollable
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Paid Post Section
+                  _buildPaidPostSection(),
+                  const SizedBox(height: 16),
+                  
+                  // Post Amount Section
+                  _buildPostAmountSection(),
+                  const SizedBox(height: 16),
+                  
+                  // Categories Section
+                  _buildCategoriesSection(),
+                  const SizedBox(height: 12),
+                  
+                  // Connect Section
+                  _buildConnectSection(),
+                  const SizedBox(height: 16),
+                  
+                  // Share Section
+                  _buildShareSection(username),
+                  const SizedBox(height: 20),
+                  
+                  // Delete Account
+                  _buildDeleteAccount(context, username),
+                ],
+              ),
+            ),
           ),
-          const SizedBox(height: 30),
-          _buildShareToOthers(username),
-          const Divider(height: 40),
-          _buildDeleteAccount(context, username),
         ],
       ),
     );
   }
 
-  Widget _buildProfileHeader(String username, String? profileImageUrl) {
+  Widget _buildPaidPostSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Stack(
-          children: [
-            CircleAvatar(
-              radius: 40,
-              backgroundColor: Colors.grey.shade300,
-              backgroundImage: profileImageUrl != null ? NetworkImage(profileImageUrl) : null,
-              child: profileImageUrl == null
-                  ? const Icon(Icons.person, size: 40, color: Colors.white)
-                  : null,
-            ),
-            Positioned(
-              bottom: 0,
-              right: 0,
-              child: GestureDetector(
-                onTap: () {
-                  Navigator.of(context).push(MaterialPageRoute(builder: (_) => const EditProfileScreen()));
-                },
-                child: const CircleAvatar(
-                  radius: 15,
-                  backgroundColor: Colors.blue,
-                  child: Icon(Icons.edit, size: 18, color: Colors.white),
+        // Paid Post container with border
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            border: Border.all(color: Colors.grey.shade300),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: const Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Paid Post',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
+              Text(
+                '\$150',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 8),
+        
+        // Fund Account text
+        const Text(
+          'Fund Account',
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: Colors.black87,
+          ),
+        ),
+        const SizedBox(height: 6),
+        
+        // ReUp! button
+        SizedBox(
+          height: 40,
+          child: ElevatedButton.icon(
+            onPressed: () {
+              Navigator.of(context).push(MaterialPageRoute(builder: (_) => const WalletScreen()));
+            },
+            icon: const Icon(Icons.add, size: 20),
+            label: const Text(
+              'ReUp!',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
             ),
-          ],
-        ),
-        const SizedBox(height: 10),
-        Text(
-          '\$$username',
-          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 5),
-        const Row(
-          children: [
-            Text('10 Posts'), // Placeholder
-            SizedBox(width: 16),
-            Text('100 Follows'), // Placeholder
-          ],
-        )
-      ],
-    );
-  }
-
-  Widget _buildFundAccount(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text('Paid Post', style: TextStyle(fontWeight: FontWeight.bold)),
-            Text('\$150', style: TextStyle(fontWeight: FontWeight.bold)),
-          ],
-        ),
-        const SizedBox(height: 10),
-        const Text('Fund Account', style: TextStyle(fontWeight: FontWeight.w600)),
-        const SizedBox(height: 5),
-        ElevatedButton.icon(
-          onPressed: () {
-            Navigator.of(context).push(MaterialPageRoute(builder: (_) => const WalletScreen()));
-          },
-          icon: const Icon(Icons.add),
-          label: const Text('Payment'),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF5159FF),
-            foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF5159FF),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              elevation: 0,
+            ),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildIncreasePostAmount() {
+  Widget _buildPostAmountSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Increase post amount', style: TextStyle(fontWeight: FontWeight.w600)),
-        Slider(
-          value: _postAmount,
-          min: 0.05,
-          max: 10.0,
-          divisions: 199,
-          label: '\$${_postAmount.toStringAsFixed(2)}',
-          onChangeEnd: (value) {
-            _updatePostAmount(value);
-          },
-          onChanged: (value) {
-            setState(() {
-              _postAmount = value;
-            });
-          },
+        const Text(
+          'Increase post amount',
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: Colors.black87,
+          ),
         ),
-        Align(
-          alignment: Alignment.center,
-          child: Text('\$${_postAmount.toStringAsFixed(2)}',
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+        const SizedBox(height: 8),
+        SliderTheme(
+          data: SliderTheme.of(context).copyWith(
+            activeTrackColor: const Color(0xFF5159FF),
+            inactiveTrackColor: Colors.grey.shade300,
+            thumbColor: const Color(0xFF5159FF),
+            overlayColor: const Color(0xFF5159FF).withOpacity(0.2),
+            trackHeight: 4.0,
+            thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8.0),
+          ),
+          child: Slider(
+            value: _postAmount,
+            min: 0.05,
+            max: 10.0,
+            divisions: 199,
+            onChanged: (value) {
+              setState(() {
+                _postAmount = value;
+              });
+            },
+            onChangeEnd: (value) {
+              _updatePostAmount(value);
+            },
+          ),
+        ),
+        Center(
+          child: Text(
+            '\$${_postAmount.toStringAsFixed(2)}',
+            style: const TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+          ),
         ),
       ],
     );
   }
 
-  Widget _buildNavigationButton(String title, IconData icon, VoidCallback onTap) {
-    return ElevatedButton.icon(
-      onPressed: onTap,
-      icon: Icon(icon),
-      label: Text(title),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: const Color(0xFF5159FF),
-        foregroundColor: Colors.white,
-        minimumSize: const Size(double.infinity, 50),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      ),
+  Widget _buildCategoriesSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Explore Categories',
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: Colors.black87,
+          ),
+        ),
+        const SizedBox(height: 6),
+        SizedBox(
+          width: double.infinity,
+          height: 40,
+          child: ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).push(MaterialPageRoute(builder: (_) => const CategoriesRankingScreen()));
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF5159FF),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              elevation: 0,
+            ),
+            child: const Text(
+              'Categories',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
-  Widget _buildShareToOthers(String username) {
-    // A map of social icons to be displayed
+  Widget _buildConnectSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Connect with others',
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: Colors.black87,
+          ),
+        ),
+        const SizedBox(height: 6),
+        SizedBox(
+          width: double.infinity,
+          height: 40,
+          child: ElevatedButton.icon(
+            onPressed: () {
+              Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ConnectScreen()));
+            },
+            icon: const Icon(Icons.people, size: 20),
+            label: const Text(
+              'Connect',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF5159FF),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              elevation: 0,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildShareSection(String username) {
     final Map<String, IconData> socialIcons = {
       'Facebook': FontAwesomeIcons.facebook,
-      'Instagram': FontAwesomeIcons.instagram,
       'Twitter': FontAwesomeIcons.twitter,
+      'Instagram': FontAwesomeIcons.instagram,
+      'Pinterest': FontAwesomeIcons.pinterest,
+      'LinkedIn': FontAwesomeIcons.linkedin,
       'TikTok': FontAwesomeIcons.tiktok,
       'YouTube': FontAwesomeIcons.youtube,
-      'Telegram': FontAwesomeIcons.telegram,
       'WhatsApp': FontAwesomeIcons.whatsapp,
-      'LinkedIn': FontAwesomeIcons.linkedin,
     };
 
     return Column(
@@ -263,24 +441,34 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
       children: [
         const Text(
           'Share to others',
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: Colors.black87,
+          ),
         ),
-        const SizedBox(height: 15),
+        const SizedBox(height: 8),
         Wrap(
-          spacing: 12.0, // Horizontal space between icons
-          runSpacing: 12.0, // Vertical space between rows
-          alignment: WrapAlignment.center,
+          spacing: 8,
+          runSpacing: 8,
           children: socialIcons.entries.map((entry) {
-            return CircleAvatar(
-              radius: 24,
-              backgroundColor: Colors.grey.shade200,
+            return Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade200,
+                shape: BoxShape.circle,
+              ),
               child: IconButton(
-                icon: FaIcon(entry.value, size: 22),
-                color: Colors.black87,
                 onPressed: () {
                   final textToShare = 'Check out my profile on Money Mouthy! \nUsername: $username';
                   Share.share(textToShare);
                 },
+                icon: FaIcon(
+                  entry.value,
+                  size: 16,
+                  color: Colors.black54,
+                ),
               ),
             );
           }).toList(),
@@ -290,51 +478,57 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
   }
 
   Widget _buildDeleteAccount(BuildContext context, String username) {
-    return TextButton(
-      onPressed: () {
-        // Show confirmation dialog
-        showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            return AlertDialog(
-              title: const Text('Delete Account'),
-              content: const Text('Are you sure you want to delete your account? This action cannot be undone.'),
-              actions: [
-                TextButton(
-                  child: const Text('Cancel'),
-                  onPressed: () => Navigator.of(context).pop(),
-                ),
-                TextButton(
-                  child: const Text('Delete', style: TextStyle(color: Colors.red)),
-                  onPressed: () async {
-                    Navigator.of(context).pop(); // Close dialog
-                    try {
-                      final user = FirebaseAuth.instance.currentUser;
-                      if (user != null) {
-                        // Delete Firestore data first
-                        await FirebaseFirestore.instance.collection('users').doc(user.uid).delete();
-                        await FirebaseFirestore.instance.collection('usernames').doc(username).delete();
-                        // Then delete the auth user
-                        await user.delete();
+    return Center(
+      child: TextButton(
+        onPressed: () {
+          showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return AlertDialog(
+                title: const Text('Delete Account'),
+                content: const Text('Are you sure you want to delete your account? This action cannot be undone.'),
+                actions: [
+                  TextButton(
+                    child: const Text('Cancel'),
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                  TextButton(
+                    child: const Text('Delete', style: TextStyle(color: Colors.red)),
+                    onPressed: () async {
+                      Navigator.of(context).pop();
+                      try {
+                        final user = FirebaseAuth.instance.currentUser;
+                        if (user != null) {
+                          await FirebaseFirestore.instance.collection('users').doc(user.uid).delete();
+                          await FirebaseFirestore.instance.collection('usernames').doc(username).delete();
+                          await user.delete();
+                        }
+                        if (mounted) {
+                          Navigator.of(context).pushReplacementNamed('/login');
+                        }
+                      } catch (e) {
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Failed to delete account: $e')),
+                          );
+                        }
                       }
-                      if (mounted) {
-                        Navigator.of(context).pushReplacementNamed('/login');
-                      }
-                    } catch (e) {
-                      if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Failed to delete account: $e')),
-                        );
-                      }
-                    }
-                  },
-                ),
-              ],
-            );
-          },
-        );
-      },
-      child: const Text('Delete Account', style: TextStyle(color: Colors.red)),
+                    },
+                  ),
+                ],
+              );
+            },
+          );
+        },
+        child: const Text(
+          'Delete Account',
+          style: TextStyle(
+            color: Colors.red,
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ),
     );
   }
 } 

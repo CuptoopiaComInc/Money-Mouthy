@@ -36,10 +36,10 @@ class _ChooseUsernameScreenState extends State<ChooseUsernameScreen> {
     final usernameRaw = _usernameController.text.trim();
     if (usernameRaw.length < 3) {
       if (_isUsernameAvailable || _isCheckingUsername) {
-        setState(() {
-          _isUsernameAvailable = false;
-          _isCheckingUsername = false;
-        });
+      setState(() {
+        _isUsernameAvailable = false;
+        _isCheckingUsername = false;
+      });
       }
       return;
     }
