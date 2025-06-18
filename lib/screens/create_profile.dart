@@ -93,15 +93,15 @@ class _CreateProfileScreenState extends State<CreateProfileScreen> {
       if (_pickedFile != null) {
         // This function will now throw an error on failure, which will be caught below.
         imageUrl = await _uploadProfileImage(user.uid, File(_pickedFile!.path));
-      }
+    }
 
       final userData = {
         'name': _nameController.text.trim(),
-        'bio': _bioController.text.trim(),
-        'profileCompleted': true,
-        'updatedAt': FieldValue.serverTimestamp(),
+      'bio': _bioController.text.trim(),
+      'profileCompleted': true,
+      'updatedAt': FieldValue.serverTimestamp(),
         if (imageUrl != null) 'photoUrl': imageUrl,
-      };
+    };
 
       debugPrint('Saving user data to Firestore...');
       await FirebaseFirestore.instance.collection('users').doc(user.uid).set(userData, SetOptions(merge: true));
@@ -160,8 +160,8 @@ class _CreateProfileScreenState extends State<CreateProfileScreen> {
         padding: const EdgeInsets.all(24),
         child: Form(
           key: _formKey,
-          child: Column(
-            children: [
+                  child: Column(
+                    children: [
               GestureDetector(
                 onTap: _pickImage,
                 child: CircleAvatar(
@@ -189,7 +189,7 @@ class _CreateProfileScreenState extends State<CreateProfileScreen> {
                 width: double.infinity,
                 height: 50,
                 child: ElevatedButton(
-                  onPressed: _isLoading ? null : _saveProfile,
+                onPressed: _isLoading ? null : _saveProfile,
                   child: _isLoading ? const CircularProgressIndicator(color: Colors.white) : const Text('Finish'),
                 ),
               ),

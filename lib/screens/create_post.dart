@@ -303,8 +303,8 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     return Scaffold(
       backgroundColor: Colors.grey[50],
       body: SafeArea(
-        child: Column(
-          children: [
+            child: Column(
+              children: [
             // Header Section
             Container(
               color: Colors.white,
@@ -348,14 +348,14 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                              children: [
                                Text(
                                  'Explore',
-                                 style: TextStyle(
-                                   fontSize: 16,
+                  style: TextStyle(
+                    fontSize: 16,
                                    color: _selectedTab == 'Explore' ? Colors.black : Colors.grey[600],
                                    fontWeight: _selectedTab == 'Explore' ? FontWeight.w600 : FontWeight.w500,
-                                 ),
-                               ),
+                  ),
+                ),
                                const SizedBox(height: 4),
-                               Container(
+                Container(
                                  height: 2,
                                  color: _selectedTab == 'Explore' ? const Color(0xFF5159FF) : Colors.transparent,
                                ),
@@ -366,17 +366,17 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                       // Following Tab
                       Expanded(
                         child: GestureDetector(
-                          onTap: () {
-                            setState(() {
+                            onTap: () {
+                              setState(() {
                               _selectedTab = 'Following';
-                            });
-                          },
+                              });
+                            },
                           child: Column(
-                            children: [
-                              Text(
+                                children: [
+                                  Text(
                                 'Following',
                                 textAlign: TextAlign.center,
-                                style: TextStyle(
+                                    style: TextStyle(
                                   fontSize: 16,
                                   color: _selectedTab == 'Following' ? Colors.black : Colors.grey[600],
                                   fontWeight: _selectedTab == 'Following' ? FontWeight.w600 : FontWeight.w500,
@@ -387,21 +387,21 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                                 height: 2,
                                 color: _selectedTab == 'Following' ? const Color(0xFF5159FF) : Colors.transparent,
                               ),
-                            ],
-                          ),
-                        ),
+                                ],
+                              ),
+                            ),
                       ),
                     ],
-                  ),
-                  
-                  const SizedBox(height: 20),
-                  
+                ),
+                
+                const SizedBox(height: 20),
+                
                   // Category Section
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
                       color: Colors.grey[100],
-                      borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(12),
                     ),
                     child: Row(
                       children: [
@@ -415,9 +415,9 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                         ),
                         const SizedBox(width: 12),
                         Expanded(
-                          child: Column(
+                  child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
+                    children: [
                               Text(
                                 '${_selectedCategory ?? 'Politics'} Category',
                                 style: TextStyle(
@@ -433,9 +433,9 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                                   fontSize: 12,
                                   color: Colors.grey[500],
                                 ),
-                              ),
-                            ],
                           ),
+                        ],
+                      ),
                         ),
                         const SizedBox(width: 12),
                         GestureDetector(
@@ -450,7 +450,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                               _selectedCategory ?? 'Politics',
                               style: const TextStyle(
                                 color: Colors.white,
-                                fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w600,
                                 fontSize: 14,
                               ),
                             ),
@@ -482,9 +482,9 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
+                  decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
@@ -492,16 +492,16 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
             offset: const Offset(0, 2),
           ),
         ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
           // Title
           Text(
             'Today!',
-            style: TextStyle(
+                            style: TextStyle(
               fontSize: 24,
-              fontWeight: FontWeight.bold,
+                              fontWeight: FontWeight.bold,
               color: Colors.grey[800],
             ),
           ),
@@ -509,7 +509,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
           const SizedBox(height: 8),
           
           // Subtitle
-          Text(
+                                Text(
             'What\'s New?',
             style: TextStyle(
               fontSize: 16,
@@ -517,7 +517,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
             ),
           ),
           
-          const SizedBox(height: 16),
+                      const SizedBox(height: 16),
           
           // Content Input
           Expanded(
@@ -527,7 +527,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                 hintText: 'Create 20 character text',
                 hintStyle: TextStyle(
                   color: Colors.grey[400],
-                  fontSize: 14,
+                          fontSize: 14,
                 ),
                 border: InputBorder.none,
                 contentPadding: EdgeInsets.zero,
@@ -540,15 +540,15 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
               expands: true,
               textAlignVertical: TextAlignVertical.top,
               onTap: () {
-                setState(() {
+                              setState(() {
                   _showExpandedView = true;
-                });
-              },
+                              });
+                            },
             ),
-          ),
-          
-          const SizedBox(height: 20),
-          
+                      ),
+                      
+                      const SizedBox(height: 20),
+                      
           // Say It Button
           SizedBox(
             width: double.infinity,
@@ -582,11 +582,11 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                     )
                   : const Text(
                       'Put Up',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
             ),
           ),
         ],
@@ -599,26 +599,26 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.white,
+                                color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
-          ),
-        ],
-      ),
+                          ),
+                        ],
+                      ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
           // Header with close button
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
                 '${_selectedCategory ?? 'Politics'} today!',
-                style: TextStyle(
+                                style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                   color: Colors.grey[800],
@@ -626,26 +626,26 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
               ),
               GestureDetector(
                 onTap: () {
-                  setState(() {
+                                setState(() {
                     _showExpandedView = false;
-                  });
-                },
+                                });
+                              },
                 child: Icon(
                   Icons.close,
                   color: Colors.grey[600],
                   size: 20,
-                ),
-              ),
-            ],
-          ),
-          
+                            ),
+                          ),
+                        ],
+                      ),
+                      
           const SizedBox(height: 12),
           
           // Description
           Text(
             _getCategoryPrompt(_selectedCategory ?? 'Politics'),
-            style: TextStyle(
-              fontSize: 14,
+                            style: TextStyle(
+                              fontSize: 14,
               color: Colors.grey[600],
               height: 1.4,
             ),
@@ -692,20 +692,20 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
             children: [
               Text(
                 '${_contentController.text.length}/2000 characters',
-                style: TextStyle(
-                  fontSize: 12,
+                                style: TextStyle(
+                                  fontSize: 12,
                   color: Colors.grey[500],
                 ),
               ),
               Text(
                 'Cost: ${_walletService.formatCurrency(_postPrice)}',
-                style: TextStyle(
-                  fontSize: 12,
+                                style: TextStyle(
+                                  fontSize: 12,
                   color: categoryColor,
                   fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
+                        ),
+                      ),
+                    ],
           ),
           
           const SizedBox(height: 20),
@@ -735,9 +735,9 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                     )
                   : const Text(
                       'Put Up',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
                       ),
                     ),
             ),
@@ -746,4 +746,4 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
       ),
     );
   }
-}
+} 

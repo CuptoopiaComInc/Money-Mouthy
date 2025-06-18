@@ -18,6 +18,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   final WalletService _walletService = WalletService();
   late TabController _tabController;
   String selectedCategory = 'News';
+  int currentCategoryIndex = 0;
 
   final List<Map<String, dynamic>> categories = [
     {'name': 'News', 'color': const Color(0xFF29CC76)},
@@ -160,119 +161,342 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 ListView(
                   padding: EdgeInsets.zero,
                   children: [
-                    // Top Ranked Category section
+                    // Top Ranked Category section - Three Column Layout with 3D Effect
                     Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                       padding: const EdgeInsets.all(16),
-                      color: Colors.grey.shade50,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            Colors.white,
+                            Colors.grey.shade50,
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey.withOpacity(0.3),
+                            spreadRadius: 2,
+                            blurRadius: 8,
+                            offset: const Offset(0, 4),
+                          ),
+                          BoxShadow(
+                            color: Colors.white.withOpacity(0.8),
+                            spreadRadius: 1,
+                            blurRadius: 3,
+                            offset: const Offset(-2, -2),
+                          ),
+                        ],
+                        border: Border.all(
+                          color: Colors.grey.shade200,
+                          width: 1,
+                        ),
+                      ),
                       child: Row(
                         children: [
+                          // Column 1: User Profile Picture
                           Container(
-                            width: 40,
-                            height: 40,
-                            decoration: const BoxDecoration(
-                              color: Color(0xFF5159FF),
+                            width: 50,
+                            height: 50,
+                            decoration: BoxDecoration(
                               shape: BoxShape.circle,
+                              border: Border.all(color: Colors.grey.shade300, width: 1),
                             ),
                             child: ClipOval(
                               child: Image.network(
-                                'https://ui-avatars.com/api/?name=John+Doe&color=7F9CF5&background=EBF4FF',
+                                'https://ui-avatars.com/api/?name=John+Doe&color=FFFFFF&background=4C5DFF',
                                 fit: BoxFit.cover,
                                 errorBuilder: (context, error, stackTrace) {
-                                  return const Icon(Icons.person, color: Colors.white);
+                                  return Container(
+                                    color: const Color(0xFF4C5DFF),
+                                    child: const Icon(Icons.person, color: Colors.white, size: 30),
+                                  );
                                 },
                               ),
                             ),
                           ),
-                          const SizedBox(width: 12),
+                          
+                          const SizedBox(width: 16),
+                          
+                          // Column 2: Top Ranked Category with colored lines
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
+                                // Top Ranked Category with crown icon
                                 Row(
                                   children: [
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                      decoration: BoxDecoration(
-                                        color: Colors.grey.shade200,
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: const Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Icon(Icons.star, color: Colors.amber, size: 12),
-                                          SizedBox(width: 2),
-                                          Text(
-                                            'Top Ranked Category',
-                                            style: TextStyle(
-                                              fontSize: 10,
-                                              fontWeight: FontWeight.w500,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
+                                    const Icon(
+                                      Icons.military_tech, 
+                                      size: 16, 
+                                      color: Color(0xFF4C5DFF)
                                     ),
-                                    const Spacer(),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                      decoration: BoxDecoration(
-                                        color: Colors.grey.shade200,
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      child: const Text(
-                                        '\$100',
-                                        style: TextStyle(
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8),
+                                    const SizedBox(width: 4),
                                     const Text(
-                                      '1 hr',
-                                      style: TextStyle(fontSize: 10, color: Colors.grey),
+                                      'Top Ranked Category',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.black87,
+                                      ),
                                     ),
                                   ],
                                 ),
+                                
                                 const SizedBox(height: 8),
-                                Row(
-                                  children: [
-                                    const Icon(Icons.refresh, size: 14, color: Colors.grey),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      '$selectedCategory Category',
-                                      style: const TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.black,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                    const Spacer(),
+                                
+                                // Colored progress lines - constrained to text width
+                                SizedBox(
+                                  width: 160, // Approximate width of "Top Ranked Category" text
+                                  child: Column(
+                                    children: [
+                                      // First line - Blue (longest)
                                     Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                        height: 3,
+                                        width: double.infinity,
                                       decoration: BoxDecoration(
-                                        color: getCategoryColor(selectedCategory),
-                                        borderRadius: BorderRadius.circular(10),
+                                          color: const Color(0xFF4C5DFF),
+                                          borderRadius: BorderRadius.circular(2),
+                                        ),
                                       ),
-                                      child: Text(
-                                        selectedCategory,
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.w500,
+                                      const SizedBox(height: 2),
+                                      
+                                      // Second line - Green (80% of text width)
+                                      Row(
+                                        children: [
+                                          Expanded(
+                                            flex: 8,
+                                            child: Container(
+                                              height: 3,
+                                              decoration: BoxDecoration(
+                                                color: const Color(0xFF10B981),
+                                                borderRadius: BorderRadius.circular(2),
+                                              ),
+                                            ),
+                                          ),
+                                          const Expanded(flex: 2, child: SizedBox()),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 2),
+                                      
+                                      // Third line - Orange (60% of text width)
+                                      Row(
+                                        children: [
+                                          Expanded(
+                                            flex: 6,
+                                            child: Container(
+                                              height: 3,
+                                              decoration: BoxDecoration(
+                                                color: const Color(0xFFF59E0B),
+                                                borderRadius: BorderRadius.circular(2),
+                                              ),
+                                            ),
+                                          ),
+                                          const Expanded(flex: 4, child: SizedBox()),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 2),
+                                      
+                                      // Fourth line - Pink (40% of text width)
+                                      Row(
+                                        children: [
+                                          Expanded(
+                                            flex: 4,
+                                            child: Container(
+                                              height: 3,
+                                      decoration: BoxDecoration(
+                                                color: const Color(0xFFEC4899),
+                                                borderRadius: BorderRadius.circular(2),
+                                              ),
+                                            ),
+                                          ),
+                                          const Expanded(flex: 6, child: SizedBox()),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          
+                          const SizedBox(width: 16),
+                          
+                          // Column 3: Price with blue progress bar
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              // Price text
+                              const Text(
+                                        '\$100',
+                                        style: TextStyle(
+                                  fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                  color: Colors.black87,
+                                ),
+                              ),
+                              
+                              const SizedBox(height: 8),
+                              
+                              // Blue progress bar container
+                              Container(
+                                width: 60,
+                                height: 8,
+                                decoration: BoxDecoration(
+                                  color: Colors.grey.shade200,
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Row(
+                                  children: [
+                                    // Blue progress (75% filled)
+                                    Expanded(
+                                      flex: 75,
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFF4C5DFF),
+                                          borderRadius: BorderRadius.circular(4),
                                         ),
                                       ),
                                     ),
+                                    // Remaining empty space
+                                    const Expanded(flex: 25, child: SizedBox()),
                                   ],
+                                ),
+                              ),
+                              
+                              // Small price indicator below bar
+                              const SizedBox(height: 4),
+                              const Text(
+                                '\$100',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: Color(0xFF4C5DFF),
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    
+                    // Switchable Categories Container - After Top Ranked
+                    Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey.withOpacity(0.1),
+                            spreadRadius: 1,
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          // Column 1: Cross Arrows - Single Row Layout
+                          SizedBox(
+                            height: 60, // Match the content height
+                            child: Row(
+                              children: [
+                                // Left arrow
+                                GestureDetector(
+                                  onTap: () {
+                                    setState(() {
+                                      currentCategoryIndex = currentCategoryIndex == 0 
+                                          ? categories.length - 1 
+                                          : currentCategoryIndex - 1;
+                                    });
+                                  },
+                                  child: Container(
+                                    width: 24,
+                                    height: 24,
+                                    decoration: const BoxDecoration(
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(
+                                      Icons.arrow_back_ios_rounded,
+                                      size: 20,
+                                      color: Colors.black54,
+                                    ),
+                                  ),
+                                ),
+                                
+                                const SizedBox(width: 4),
+                                
+                                // Right arrow
+                                GestureDetector(
+                                  onTap: () {
+                                    setState(() {
+                                      currentCategoryIndex = (currentCategoryIndex + 1) % categories.length;
+                                    });
+                                  },
+                                  child: Container(
+                                    width: 24,
+                                    height: 24,
+                                    decoration: const BoxDecoration(
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(
+                                      Icons.arrow_forward_ios_rounded,
+                                      size: 20,
+                                      color: Colors.black54,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          
+                          const SizedBox(width: 16),
+                          
+                          // Column 2: Category name and description
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  '${categories[currentCategoryIndex]['name']} Category',
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.black87,
+                                  ),
                                 ),
                                 const SizedBox(height: 4),
                                 const Text(
                                   'Featuring latest news trends and more',
                                   style: TextStyle(
-                                    fontSize: 11,
+                                    fontSize: 12,
                                     color: Colors.grey,
                                   ),
                                 ),
                               ],
+                            ),
+                          ),
+                          
+                          const SizedBox(width: 16),
+                          
+                          // Column 3: Category badge
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: categories[currentCategoryIndex]['color'],
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text(
+                              categories[currentCategoryIndex]['name'],
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ),
                         ],
@@ -332,7 +556,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            children: [
+              children: [
               CircleAvatar(
                 radius: 20,
                 backgroundImage: NetworkImage(post['avatar']),
@@ -340,20 +564,20 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               ),
               const SizedBox(width: 10),
               Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                   Text(post['author'], style: const TextStyle(fontWeight: FontWeight.bold)),
                   Text(post['time'], style: const TextStyle(color: Colors.grey, fontSize: 12)),
                 ],
-              ),
-              const Spacer(),
-              if (post['isPaid'])
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade200,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+                          ),
+                          const Spacer(),
+                          if (post['isPaid'])
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: Colors.grey.shade200,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
                   child: Text('\$${post['amount']}', style: const TextStyle(fontWeight: FontWeight.bold)),
                 ),
             ],
@@ -383,7 +607,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           const SizedBox(height: 10),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
+              children: [
               _iconTextButton(Icons.favorite_border, '${post['likes']} Likes'),
               _iconTextButton(Icons.repeat, '${post['reposts']} Reposts'),
               _iconTextButton(Icons.comment_outlined, '${post['comments']} Comments'),
