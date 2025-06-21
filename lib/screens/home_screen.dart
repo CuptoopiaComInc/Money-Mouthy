@@ -5,6 +5,7 @@ import 'package:money_mouthy_two/screens/wallet_screen.dart';
 import 'package:money_mouthy_two/services/wallet_service.dart';
 import 'package:money_mouthy_two/widgets/app_logo.dart';
 import 'package:money_mouthy_two/widgets/profile_drawer.dart';
+import 'package:money_mouthy_two/screens/profile_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -27,37 +28,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     {'name': 'Entertainment', 'color': const Color(0xFFA06A00)},
     {'name': 'Sport', 'color': const Color(0xFFC43DFF)},
     {'name': 'Religion', 'color': const Color(0xFF000000)},
-  ];
-
-  final List<Map<String, dynamic>> samplePosts = [
-    {
-      'author': 'Lina Kamson',
-      'time': '6h',
-      'title': 'Reality in Ethiopia',
-      'content': 'Don\'t miss out on trending new happening around the world, choose from our list of categories and share your stories',
-      'image': 'https://images.unsplash.com/photo-1506748686214-e9df14d4d9d0?q=80&w=1887&auto=format&fit=crop',
-      'category': 'News',
-      'isPaid': true,
-      'amount': 100,
-      'likes': 0,
-      'reposts': 0,
-      'comments': 12,
-      'avatar': 'https://ui-avatars.com/api/?name=Lina+Kamson&color=7F9CF5&background=EBF4FF',
-    },
-    {
-      'author': 'Doris Camilla',
-      'time': '8h',
-      'title': 'The Future of Tech',
-      'content': 'Exploring the next wave of innovation and what it means for our daily lives. A deep dive into AI, blockchain, and more.',
-      'image': 'https://images.unsplash.com/photo-1531297484001-80022131f5a1?q=80&w=2020&auto=format&fit=crop',
-      'category': 'Politics',
-      'isPaid': true,
-      'amount': 100,
-      'likes': 0,
-      'reposts': 0,
-      'comments': 8,
-      'avatar': 'https://ui-avatars.com/api/?name=Doris+Camilla&color=7F9CF5&background=EBF4FF',
-    },
   ];
 
   @override
@@ -291,9 +261,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                               decoration: BoxDecoration(
                                                 color: const Color(0xFFF59E0B),
                                                 borderRadius: BorderRadius.circular(2),
-                                              ),
-                                            ),
                                           ),
+                                      ),
+                                    ),
                                           const Expanded(flex: 4, child: SizedBox()),
                                         ],
                                       ),
@@ -309,7 +279,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                       decoration: BoxDecoration(
                                                 color: const Color(0xFFEC4899),
                                                 borderRadius: BorderRadius.circular(2),
-                                              ),
+                                      ),
                                             ),
                                           ),
                                           const Expanded(flex: 6, child: SizedBox()),
@@ -368,7 +338,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               
                               // Small price indicator below bar
                               const SizedBox(height: 4),
-                              const Text(
+                                    const Text(
                                 '\$100',
                                 style: TextStyle(
                                   fontSize: 10,
@@ -395,16 +365,16 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                             spreadRadius: 1,
                             blurRadius: 4,
                             offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
+                                    ),
+                                  ],
+                                ),
                       child: Row(
                         children: [
                           // Column 1: Cross Arrows - Single Row Layout
                           SizedBox(
                             height: 60, // Match the content height
                             child: Row(
-                              children: [
+                                  children: [
                                 // Left arrow
                                 GestureDetector(
                                   onTap: () {
@@ -442,15 +412,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                     height: 24,
                                     decoration: const BoxDecoration(
                                       shape: BoxShape.circle,
-                                    ),
+                                      ),
                                     child: const Icon(
                                       Icons.arrow_forward_ios_rounded,
                                       size: 20,
                                       color: Colors.black54,
+                                        ),
+                                      ),
                                     ),
-                                  ),
-                                ),
-                              ],
+                                  ],
                             ),
                           ),
                           
@@ -503,8 +473,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       ),
                     ),
                     
-                    // Posts
-                    ...samplePosts.map((post) => _buildPostCard(post)).toList(),
+                    // Placeholder when posts will be fetched via PostService or PostFeedScreen.
+                    const Padding(
+                      padding: EdgeInsets.all(32.0),
+                      child: Center(child: Text('No posts to show')),
+                    ),
                   ],
                 ),
                 // Following tab
@@ -532,97 +505,31 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: ''),
         ],
         onTap: (index) {
-          if (index == 2) {
+          switch (index) {
+            case 1:
+              Navigator.pushNamed(context, '/chats');
+              break;
+            case 2:
             Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => const CreatePostScreen()),
             );
+              break;
+            case 3:
+              Navigator.pushNamed(context, '/search');
+              break;
+            case 4:
+              final uid = FirebaseAuth.instance.currentUser?.uid;
+              if (uid != null) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => ProfileScreen(userId: uid)),
+                );
+              }
+              break;
           }
         },
       ),
-    );
-  }
-
-  Widget _buildPostCard(Map<String, dynamic> post) {
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-              children: [
-              CircleAvatar(
-                radius: 20,
-                backgroundImage: NetworkImage(post['avatar']),
-                backgroundColor: Colors.grey.shade200,
-              ),
-              const SizedBox(width: 10),
-              Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                  Text(post['author'], style: const TextStyle(fontWeight: FontWeight.bold)),
-                  Text(post['time'], style: const TextStyle(color: Colors.grey, fontSize: 12)),
-                ],
-                          ),
-                          const Spacer(),
-                          if (post['isPaid'])
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: Colors.grey.shade200,
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                  child: Text('\$${post['amount']}', style: const TextStyle(fontWeight: FontWeight.bold)),
-                ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          if (post['image'] != null && (post['image'] as String).isNotEmpty)
-            ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: Image.network(
-                post['image'],
-                width: double.infinity,
-                height: 150,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    height: 150,
-                    color: Colors.grey.shade300,
-                    child: const Icon(Icons.image_not_supported, color: Colors.white),
-                  );
-                },
-              ),
-            ),
-          const SizedBox(height: 10),
-          Text(post['title'], style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 5),
-          Text(post['content'], style: const TextStyle(color: Colors.grey)),
-          const SizedBox(height: 10),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-              _iconTextButton(Icons.favorite_border, '${post['likes']} Likes'),
-              _iconTextButton(Icons.repeat, '${post['reposts']} Reposts'),
-              _iconTextButton(Icons.comment_outlined, '${post['comments']} Comments'),
-            ],
-          )
-        ],
-      ),
-    );
-  }
-
-  Widget _iconTextButton(IconData icon, String label) {
-    return TextButton.icon(
-      onPressed: () {},
-      icon: Icon(icon, size: 18, color: Colors.grey),
-      label: Text(label, style: const TextStyle(color: Colors.grey)),
     );
   }
 } 

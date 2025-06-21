@@ -434,14 +434,7 @@ class _AddFundsDialogState extends State<AddFundsDialog> {
           ),
           
           SizedBox(height: 16),
-          Text(
-            'Note: This is a demo. Real payment processing would require backend integration.',
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey.shade600,
-              fontStyle: FontStyle.italic,
-            ),
-          ),
+          SizedBox.shrink(),
         ],
       ),
       actions: [
@@ -494,8 +487,7 @@ class _AddFundsDialogState extends State<AddFundsDialog> {
     setState(() => _isLoading = true);
 
     try {
-      // For demo purposes, we'll simulate the payment
-      final success = await _walletService.simulatePayment(amount);
+      final success = await _walletService.addFunds(amount);
       
       if (success) {
         ScaffoldMessenger.of(context).showSnackBar(

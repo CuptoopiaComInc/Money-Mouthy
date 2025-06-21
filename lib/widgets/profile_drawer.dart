@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:money_mouthy_two/screens/categories_ranking.dart';
 import 'package:money_mouthy_two/screens/connect_screen.dart';
 import 'package:money_mouthy_two/screens/edit_profile_screen.dart';
 import 'package:money_mouthy_two/screens/wallet_screen.dart';
-import 'package:share_plus/share_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:money_mouthy_two/screens/category_selection.dart';
 
 class ProfileDrawer extends StatefulWidget {
   const ProfileDrawer({Key? key}) : super(key: key);
@@ -359,7 +359,7 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
           height: 40,
           child: ElevatedButton(
             onPressed: () {
-              Navigator.of(context).push(MaterialPageRoute(builder: (_) => const CategoriesRankingScreen()));
+              Navigator.of(context).push(MaterialPageRoute(builder: (_) => const CategorySelectionScreen()));
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF5159FF),
@@ -460,9 +460,11 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
                 shape: BoxShape.circle,
               ),
               child: IconButton(
-                onPressed: () {
-                  final textToShare = 'Check out my profile on Money Mouthy! \nUsername: $username';
-                  Share.share(textToShare);
+                onPressed: () async {
+                  final url = _buildSocialUrl(entry.key, username);
+                  if (await canLaunchUrl(Uri.parse(url))) {
+                    await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+                  }
                 },
                 icon: FaIcon(
                   entry.value,
@@ -475,6 +477,30 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
         ),
       ],
     );
+  }
+
+  String _buildSocialUrl(String platform, String username) {
+    final encodedUsername = Uri.encodeComponent(username);
+    switch (platform) {
+      case 'Facebook':
+        return 'https://www.facebook.com/sharer/sharer.php?u=https://moneymouthy.app/user/$encodedUsername';
+      case 'Twitter':
+        return 'https://twitter.com/intent/tweet?text=Check%20out%20my%20profile%20on%20Money%20Mouthy%20%40$encodedUsername%20https://moneymouthy.app';
+      case 'Instagram':
+        return 'https://www.instagram.com';
+      case 'Pinterest':
+        return 'https://www.pinterest.com/pin/create/button/?url=https://moneymouthy.app/user/$encodedUsername';
+      case 'LinkedIn':
+        return 'https://www.linkedin.com/sharing/share-offsite/?url=https://moneymouthy.app/user/$encodedUsername';
+      case 'TikTok':
+        return 'https://www.tiktok.com';
+      case 'YouTube':
+        return 'https://www.youtube.com';
+      case 'WhatsApp':
+        return 'https://wa.me/?text=Check%20out%20my%20profile%20on%20Money%20Mouthy%20https://moneymouthy.app/user/$encodedUsername';
+      default:
+        return 'https://moneymouthy.app';
+    }
   }
 
   Widget _buildDeleteAccount(BuildContext context, String username) {

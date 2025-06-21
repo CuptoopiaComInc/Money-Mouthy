@@ -1,7 +1,11 @@
+// ignore_for_file: avoid_print
+
+import 'dart:async';
 import 'dart:convert';
+
 import 'package:flutter/foundation.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:intl/intl.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class Post {
   final String id;
@@ -74,7 +78,9 @@ class Post {
       price: map['price'].toDouble(),
       category: map['category'],
       tags: List<String>.from(map['tags'] ?? []),
-      createdAt: DateTime.fromMillisecondsSinceEpoch(map['createdAt']),
+      createdAt: map['createdAt'] is int
+          ? DateTime.fromMillisecondsSinceEpoch(map['createdAt'])
+          : (map['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       likes: map['likes'] ?? 0,
       comments: map['comments'] ?? 0,
       views: map['views'] ?? 0,
@@ -153,133 +159,31 @@ class PostService {
   PostService._internal();
 
   final List<Post> _posts = [];
-  final String _currentUserId = 'user_${DateTime.now().millisecondsSinceEpoch}';
-  final String _currentUserName = 'Anonymous User';
-
-  // Sample posts for demo
-  final List<Map<String, dynamic>> _samplePosts = [
-    {
-      'author': 'John Doe',
-      'title': 'The Future of Cryptocurrency',
-      'content': 'Cryptocurrency is revolutionizing the way we think about money and financial transactions. In this comprehensive guide, I will share insights from 5 years of experience in the crypto space, including strategies that have helped me achieve consistent returns.',
-      'price': 149.99,
-      'category': 'Finance',
-      'tags': ['#crypto', '#finance', '#future'],
-      'likes': 245,
-      'comments': 67,
-      'views': 1203,
-    },
-    {
-      'author': 'Sarah Wilson',
-      'title': 'Building a Successful Startup',
-      'content': 'Starting a business is one of the most challenging yet rewarding experiences. After building 3 successful companies worth over \$10M, here are my proven strategies for turning ideas into profitable ventures.',
-      'price': 89.99,
-      'category': 'Business',
-      'tags': ['#startup', '#business', '#entrepreneur'],
-      'likes': 428,
-      'comments': 134,
-      'views': 2156,
-    },
-    {
-      'author': 'Mike Chen',
-      'title': 'Free Investment Tips for Beginners',
-      'content': 'Here are some basic investment strategies that everyone should know. These are foundational principles that can help you get started on your wealth-building journey without breaking the bank.',
-      'price': 0.0,
-      'category': 'Finance',
-      'tags': ['#investment', '#tips', '#money'],
-      'likes': 189,
-      'comments': 43,
-      'views': 892,
-    },
-    {
-      'author': 'Tech Guru',
-      'title': 'AI Revolution 2024: What\'s Coming Next',
-      'content': 'Artificial Intelligence is transforming every industry. As someone who has worked at Google and Meta, I will reveal the secrets of AI development and what breakthrough technologies are coming in 2024.',
-      'price': 79.99,
-      'category': 'Technology',
-      'tags': ['#ai', '#tech', '#future'],
-      'likes': 356,
-      'comments': 89,
-      'views': 1678,
-    },
-    {
-      'author': 'Dr. Smith',
-      'title': 'Mental Health Mastery Guide',
-      'content': 'As a practicing psychologist for 15 years, I have developed proven techniques for managing stress, anxiety, and depression. This comprehensive guide includes exercises and strategies used by top performers.',
-      'price': 59.99,
-      'category': 'Health',
-      'tags': ['#mentalhealth', '#wellness', '#psychology'],
-      'likes': 298,
-      'comments': 76,
-      'views': 987,
-    },
-  ];
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _postsSubscription;
+  String get _currentUserId => _auth.currentUser?.uid ?? 'anonymous';
+  String get _currentUserName => _auth.currentUser?.displayName ?? _auth.currentUser?.email ?? 'Anonymous User';
 
   Future<void> initialize() async {
-    await _loadPosts();
-    
-    // Add sample posts if none exist
-    if (_posts.isEmpty) {
-      await _addSamplePosts();
-    }
+    _listenToPosts();
   }
 
-  Future<void> _addSamplePosts() async {
-    final now = DateTime.now();
-    
-    for (int i = 0; i < _samplePosts.length; i++) {
-      final samplePost = _samplePosts[i];
-      final post = Post(
-        id: 'sample_${i + 1}',
-        author: samplePost['author'],
-        authorId: 'user_sample_$i',
-        title: samplePost['title'],
-        content: samplePost['content'],
-        price: samplePost['price'].toDouble(),
-        category: samplePost['category'],
-        tags: List<String>.from(samplePost['tags']),
-        createdAt: now.subtract(Duration(hours: i * 2 + 1)),
-        likes: samplePost['likes'],
-        comments: samplePost['comments'],
-        views: samplePost['views'],
-      );
-      
-      _posts.add(post);
-    }
-    
-    await _savePosts();
-  }
-
-  Future<void> _loadPosts() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final postsJson = prefs.getStringList('user_posts') ?? [];
-      
-      _posts.clear();
-      for (final json in postsJson) {
-        final map = Map<String, dynamic>.from(jsonDecode(json));
-        _posts.add(Post.fromMap(map));
-      }
-      
-      // Sort posts by creation date (newest first)
-      _posts.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-    } catch (e) {
-      if (kDebugMode) {
-        print('Error loading posts: $e');
-      }
-    }
-  }
-
-  Future<void> _savePosts() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final postsJson = _posts.map((post) => jsonEncode(post.toMap())).toList();
-      await prefs.setStringList('user_posts', postsJson);
-    } catch (e) {
-      if (kDebugMode) {
-        print('Error saving posts: $e');
-      }
-    }
+  void _listenToPosts() {
+    _postsSubscription?.cancel();
+    _postsSubscription = _firestore
+        .collection('posts')
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .listen((snapshot) {
+      _posts
+        ..clear()
+        ..addAll(snapshot.docs.map((doc) {
+          final data = doc.data();
+          final map = Map<String, dynamic>.from(data)..['id'] = doc.id;
+          return Post.fromMap(map);
+        }));
+    });
   }
 
   Future<String> createPost({
@@ -293,28 +197,26 @@ class PostService {
     String? imageUrl,
     String? linkUrl,
   }) async {
-    final postId = 'post_${DateTime.now().millisecondsSinceEpoch}';
-    
-    final post = Post(
-      id: postId,
-      author: _currentUserName,
-      authorId: _currentUserId,
-      title: title?.trim().isEmpty == true ? null : title?.trim(),
-      content: content.trim(),
-      price: price,
-      category: category,
-      tags: tags ?? [],
-      createdAt: DateTime.now(),
-      isPublic: isPublic,
-      allowComments: allowComments,
-      imageUrl: imageUrl,
-      linkUrl: linkUrl,
-    );
+    final docRef = await _firestore.collection('posts').add({
+      'author': _currentUserName,
+      'authorId': _currentUserId,
+      'title': title?.trim().isEmpty == true ? null : title?.trim(),
+      'content': content.trim(),
+      'price': price,
+      'category': category,
+      'tags': tags ?? [],
+      'createdAt': FieldValue.serverTimestamp(),
+      'likes': 0,
+      'comments': 0,
+      'views': 0,
+      'isPaid': false,
+      'isPublic': isPublic,
+      'allowComments': allowComments,
+      'imageUrl': imageUrl,
+      'linkUrl': linkUrl,
+    });
 
-    _posts.insert(0, post); // Add to beginning for newest first
-    await _savePosts();
-    
-    return postId;
+    return docRef.id;
   }
 
   List<Post> getAllPosts() {
@@ -358,24 +260,23 @@ class PostService {
   }
 
   Future<void> likePost(String postId) async {
-    final index = _posts.indexWhere((post) => post.id == postId);
-    if (index != -1) {
-      _posts[index] = _posts[index].copyWith(likes: _posts[index].likes + 1);
-      await _savePosts();
-    }
+    await _firestore.collection('posts').doc(postId).update({
+      'likes': FieldValue.increment(1),
+    });
   }
 
   Future<void> viewPost(String postId) async {
-    final index = _posts.indexWhere((post) => post.id == postId);
-    if (index != -1) {
-      _posts[index] = _posts[index].copyWith(views: _posts[index].views + 1);
-      await _savePosts();
-    }
+    await _firestore.collection('posts').doc(postId).update({
+      'views': FieldValue.increment(1),
+    });
   }
 
   Future<void> deletePost(String postId) async {
-    _posts.removeWhere((post) => post.id == postId && post.authorId == _currentUserId);
-    await _savePosts();
+    final doc = _firestore.collection('posts').doc(postId);
+    final snapshot = await doc.get();
+    if (snapshot.exists && snapshot['authorId'] == _currentUserId) {
+      await doc.delete();
+    }
   }
 
   List<Post> getUserPosts() {

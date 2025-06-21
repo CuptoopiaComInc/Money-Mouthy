@@ -326,8 +326,8 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                           width: 50,
                           height: 50,
                           fit: BoxFit.cover,
-                        ),
-                      ),
+                    ),
+                  ),
                     ),
                   ),
                   
@@ -343,7 +343,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                              setState(() {
                                _selectedTab = 'Explore';
                              });
-                           },
+                  },
                            child: Column(
                              children: [
                                Text(
@@ -361,8 +361,8 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                                ),
                              ],
                            ),
-                         ),
-                       ),
+                        ),
+                      ),
                       // Following Tab
                       Expanded(
                         child: GestureDetector(
@@ -380,13 +380,13 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                                   fontSize: 16,
                                   color: _selectedTab == 'Following' ? Colors.black : Colors.grey[600],
                                   fontWeight: _selectedTab == 'Following' ? FontWeight.w600 : FontWeight.w500,
-                                ),
+                                    ),
                               ),
                               const SizedBox(height: 4),
                               Container(
                                 height: 2,
                                 color: _selectedTab == 'Following' ? const Color(0xFF5159FF) : Colors.transparent,
-                              ),
+                                  ),
                                 ],
                               ),
                             ),
@@ -412,7 +412,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                             color: Colors.grey[600],
                             size: 20,
                           ),
-                        ),
+                  ),
                         const SizedBox(width: 12),
                         Expanded(
                   child: Column(
@@ -425,7 +425,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                                   color: Colors.grey[800],
                                   fontWeight: FontWeight.w600,
                                 ),
-                              ),
+                          ),
                               const SizedBox(height: 2),
                               Text(
                                 'Featuring latest news trends and more',
@@ -452,8 +452,8 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                                 color: Colors.white,
                     fontWeight: FontWeight.w600,
                                 fontSize: 14,
-                              ),
-                            ),
+                  ),
+                ),
                           ),
                         ),
                       ],
@@ -470,8 +470,8 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
               child: Padding(
                 padding: const EdgeInsets.all(20),
                 child: _showExpandedView ? _buildExpandedView(categoryColor) : _buildSimpleView(categoryColor),
-              ),
-            ),
+                  ),
+                ),
           ],
         ),
       ),
@@ -490,7 +490,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
             color: Colors.black.withOpacity(0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
-          ),
+                    ),
         ],
                   ),
                   child: Column(
@@ -503,8 +503,8 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
               fontSize: 24,
                               fontWeight: FontWeight.bold,
               color: Colors.grey[800],
-            ),
-          ),
+                            ),
+                          ),
           
           const SizedBox(height: 8),
           
@@ -514,8 +514,8 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
             style: TextStyle(
               fontSize: 16,
               color: Colors.grey[600],
-            ),
-          ),
+                            ),
+                          ),
           
                       const SizedBox(height: 16),
           
@@ -544,7 +544,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                   _showExpandedView = true;
                               });
                             },
-            ),
+                          ),
                       ),
                       
                       const SizedBox(height: 20),
@@ -598,7 +598,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
+                            decoration: BoxDecoration(
                                 color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
@@ -648,8 +648,8 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                               fontSize: 14,
               color: Colors.grey[600],
               height: 1.4,
-            ),
-          ),
+                            ),
+                          ),
           
           const SizedBox(height: 20),
           
@@ -672,7 +672,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                   ),
                   border: InputBorder.none,
                   contentPadding: EdgeInsets.zero,
-                ),
+                              ),
                 style: TextStyle(
                   fontSize: 16,
                   color: Colors.grey[700],
@@ -696,7 +696,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                                   fontSize: 12,
                   color: Colors.grey[500],
                 ),
-              ),
+                              ),
               Text(
                 'Cost: ${_walletService.formatCurrency(_postPrice)}',
                                 style: TextStyle(
@@ -706,10 +706,10 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                         ),
                       ),
                     ],
-          ),
-          
+                  ),
+                
           const SizedBox(height: 20),
-          
+                
           // Say It Button
           SizedBox(
             width: double.infinity,
@@ -739,10 +739,10 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
                       ),
-                    ),
-            ),
+                  ),
+                ),
           ),
-        ],
+              ],
       ),
     );
   }

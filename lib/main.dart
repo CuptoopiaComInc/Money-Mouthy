@@ -15,6 +15,8 @@ import 'screens/wallet_screen.dart';
 import 'services/wallet_service.dart';
 import 'services/post_service.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'screens/search_screen.dart';
+import 'screens/chat_list_screen.dart';
 
 void main() async {
       //hide status bar for the screen
@@ -62,6 +64,8 @@ class MyApp extends StatelessWidget {
         '/post_feed': (context) => const PostFeedScreen(),
         '/categories_ranking': (context) => const CategoriesRankingScreen(),
         '/wallet': (context) => const WalletScreen(),
+        '/search': (context) => const SearchScreen(),
+        '/chats': (context) => const ChatListScreen(),
       },
     );
   }
