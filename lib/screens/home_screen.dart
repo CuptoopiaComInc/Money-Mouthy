@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:money_mouthy_two/screens/create_post.dart';
 import 'package:money_mouthy_two/screens/wallet_screen.dart';
 import 'package:money_mouthy_two/services/wallet_service.dart';
+import 'package:money_mouthy_two/services/post_service.dart';
 import 'package:money_mouthy_two/widgets/app_logo.dart';
 import 'package:money_mouthy_two/widgets/profile_drawer.dart';
 import 'package:money_mouthy_two/screens/profile_screen.dart';
@@ -33,7 +34,19 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
+    _initializeServices();
     _tabController = TabController(length: 2, vsync: this);
+  }
+
+  Future<void> _initializeServices() async {
+    // Initialize services here, where it's safe (after user login).
+    await WalletService().initialize();
+    await PostService().initialize();
+    if (mounted) {
+      setState(() {
+        // Refresh the UI if needed after services are ready.
+      });
+    }
   }
 
   @override

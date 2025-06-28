@@ -25,15 +25,11 @@ void main() async {
       statusBarIconBrightness: Brightness.dark //for dark icons
     ));
 
-    //initialize firebase 
+    //initialize firebase
     WidgetsFlutterBinding.ensureInitialized();
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
-
-    // Initialize services
-    await WalletService().initialize();
-    await PostService().initialize();
 
   runApp(const MyApp());
 }
@@ -98,7 +94,6 @@ class _SplashScreenState extends State<SplashScreen>{
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Money Mouth Logo - Using a placeholder until the image issue is resolved
             Container(
               width: 150,
               height: 150,
