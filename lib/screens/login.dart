@@ -5,6 +5,8 @@ import 'package:money_mouthy_two/screens/forgot_password.dart';
 import 'package:money_mouthy_two/widgets/app_logo.dart';
 import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:async';
+import 'dart:io';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -31,6 +33,24 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
+  // Check network connectivity - try multiple hosts for better reliability
+  Future<bool> _hasNetworkConnection() async {
+    final hosts = ['google.com', '8.8.8.8', 'firebase.google.com'];
+    
+    for (String host in hosts) {
+      try {
+        final result = await InternetAddress.lookup(host)
+            .timeout(const Duration(seconds: 10));
+        if (result.isNotEmpty && result[0].rawAddress.isNotEmpty) {
+          return true;
+        }
+      } catch (_) {
+        continue; // Try next host
+      }
+    }
+    return false; // All hosts failed
+  }
+
   Future<void> _handleInitialSubmit() async {
     final input = _emailController.text.trim();
     if (input.isEmpty) {
@@ -45,13 +65,24 @@ class _LoginScreenState extends State<LoginScreen> {
       _errorMessage = null;
     });
 
-    // Simulate checking if user exists
-    await Future.delayed(const Duration(seconds: 1));
+    try {
+      // Simple delay to simulate checking - no network check needed here
+      await Future.delayed(const Duration(seconds: 1));
 
-    setState(() {
-      _isLoading = false;
-      _showPasswordField = true;
-    });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _showPasswordField = true;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _errorMessage = 'An error occurred. Please try again.';
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   Future<void> _login() async {
@@ -68,13 +99,14 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
+      // Add timeout to Firebase authentication - increased timeout
       final credential = await _auth.signInWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
-      );
+      ).timeout(const Duration(seconds: 30));
 
-      // Reload user to get the latest emailVerified flag
-      await credential.user?.reload();
+      // Reload user to get the latest emailVerified flag with timeout
+      await credential.user?.reload().timeout(const Duration(seconds: 20));
       final user = _auth.currentUser;
 
       if (user == null) {
@@ -85,31 +117,36 @@ class _LoginScreenState extends State<LoginScreen> {
       }
 
       if (!user.emailVerified) {
-        // Send a new verification email
-        await user.sendEmailVerification();
+        // Send a new verification email with timeout
+        await user.sendEmailVerification().timeout(const Duration(seconds: 20));
         await _auth.signOut();
         
         setState(() {
           _errorMessage = 'Please verify your email first. A new verification link has been sent to your email.';
+          _isLoading = false;
         });
         return;
       }
 
-      // Update or create user document (emailVerified/lastLogin)
+      // Update or create user document (emailVerified/lastLogin) with timeout
       try {
         await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
           'emailVerified': true,
           'lastLogin': FieldValue.serverTimestamp(),
-        }, SetOptions(merge: true));
+        }, SetOptions(merge: true)).timeout(const Duration(seconds: 20));
       } catch (e) {
         debugPrint('Unable to update user doc after login: $e');
       }
 
-      // Retrieve user document once
+      // Retrieve user document once with timeout
       Map<String, dynamic>? userData;
       bool profileCompleted = false;
       try {
-        final snapshot = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+        final snapshot = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .get()
+            .timeout(const Duration(seconds: 20));
         userData = snapshot.data();
         profileCompleted = (userData?['profileCompleted'] ?? false) as bool;
       } catch (e) {
@@ -127,37 +164,53 @@ class _LoginScreenState extends State<LoginScreen> {
       } else {
         Navigator.pushReplacementNamed(context, '/create_profile');
       }
-    } on FirebaseAuthException catch (e) {
-      String errorMessage;
-      switch (e.code) {
-        case 'user-not-found':
-          errorMessage = 'No account found with this email. Please sign up first.';
-          break;
-        case 'wrong-password':
-        case 'invalid-credential':
-          errorMessage = 'Incorrect email or password. Please try again.';
-          break;
-        case 'invalid-email':
-          errorMessage = 'Please enter a valid email address.';
-          break;
-        case 'user-disabled':
-          errorMessage = 'This account has been disabled. Please contact support.';
-          break;
-        default:
-          errorMessage = e.message ?? 'Login failed. Please try again.';
+    } on TimeoutException {
+      if (mounted) {
+        // Check network connectivity only when there's a timeout
+        final hasConnection = await _hasNetworkConnection();
+        final errorMessage = hasConnection 
+            ? 'Request timed out. Firebase servers might be slow. Please try again.'
+            : 'No internet connection. Please check your network and try again.';
+        
+        setState(() {
+          _errorMessage = errorMessage;
+          _isLoading = false;
+        });
       }
-      setState(() {
-        _errorMessage = errorMessage;
-      });
+    } on FirebaseAuthException catch (e) {
+      if (mounted) {
+        String errorMessage;
+        switch (e.code) {
+          case 'user-not-found':
+            errorMessage = 'No account found with this email. Please sign up first.';
+            break;
+          case 'wrong-password':
+          case 'invalid-credential':
+            errorMessage = 'Incorrect email or password. Please try again.';
+            break;
+          case 'invalid-email':
+            errorMessage = 'Please enter a valid email address.';
+            break;
+          case 'user-disabled':
+            errorMessage = 'This account has been disabled. Please contact support.';
+            break;
+          case 'network-request-failed':
+            errorMessage = 'Network error. Please check your connection and try again.';
+            break;
+          default:
+            errorMessage = e.message ?? 'Login failed. Please try again.';
+        }
+        setState(() {
+          _errorMessage = errorMessage;
+          _isLoading = false;
+        });
+      }
     } catch (e) {
-      setState(() {
-        _errorMessage = 'An unexpected error occurred. Please try again.';
-      });
-    } finally {
       if (mounted) {
         setState(() {
-        _isLoading = false;
-      });
+          _errorMessage = 'An unexpected error occurred. Please try again.';
+          _isLoading = false;
+        });
       }
     }
   }

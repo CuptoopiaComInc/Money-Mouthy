@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:money_mouthy_two/screens/reset_password_success.dart';
+import 'dart:async';
+import 'dart:io';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({Key? key}) : super(key: key);
@@ -19,6 +21,24 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     super.dispose();
   }
 
+  // Check network connectivity - try multiple hosts for better reliability
+  Future<bool> _hasNetworkConnection() async {
+    final hosts = ['google.com', '8.8.8.8', 'firebase.google.com'];
+    
+    for (String host in hosts) {
+      try {
+        final result = await InternetAddress.lookup(host)
+            .timeout(const Duration(seconds: 10));
+        if (result.isNotEmpty && result[0].rawAddress.isNotEmpty) {
+          return true;
+        }
+      } catch (_) {
+        continue; // Try next host
+      }
+    }
+    return false; // All hosts failed
+  }
+
   Future<void> _sendResetEmail() async {
     final email = _emailController.text.trim();
     if (email.isEmpty) {
@@ -31,12 +51,26 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       return;
     }
 
+    // Validate email format
+    if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(email)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter a valid email address'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
     setState(() {
       _isLoading = true;
     });
 
     try {
-      await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
+      // Add timeout to Firebase reset email operation - increased timeout
+      await FirebaseAuth.instance
+          .sendPasswordResetEmail(email: email)
+          .timeout(const Duration(seconds: 30));
 
       if (mounted) {
         setState(() {
@@ -50,13 +84,63 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           ),
         );
       }
+    } on TimeoutException {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+        
+        // Check network connectivity only when there's a timeout
+        final hasConnection = await _hasNetworkConnection();
+        final errorMessage = hasConnection 
+            ? 'Request timed out. Firebase servers might be slow. Please try again.'
+            : 'No internet connection. Please check your network and try again.';
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(errorMessage),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     } on FirebaseAuthException catch (e) {
       if (mounted) {
         setState(() {
           _isLoading = false;
         });
+        
+        String errorMessage;
+        switch (e.code) {
+          case 'user-not-found':
+            errorMessage = 'No account found with this email address.';
+            break;
+          case 'invalid-email':
+            errorMessage = 'Please enter a valid email address.';
+            break;
+          case 'network-request-failed':
+            errorMessage = 'Network error. Please check your connection and try again.';
+            break;
+          default:
+            errorMessage = e.message ?? 'Failed to send reset email. Please try again.';
+        }
+        
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.message ?? 'Failed to send reset email')),
+          SnackBar(
+            content: Text(errorMessage),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('An unexpected error occurred. Please try again.'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     }

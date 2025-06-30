@@ -6,6 +6,8 @@ import '../widgets/page_title_with_indicator.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
+import 'dart:async';
+import 'dart:io';
 
 class CreateAccountScreen extends StatefulWidget {
   const CreateAccountScreen({Key? key}) : super(key: key);
@@ -33,6 +35,24 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
     super.dispose();
   }
 
+  // Check network connectivity - try multiple hosts for better reliability
+  Future<bool> _hasNetworkConnection() async {
+    final hosts = ['google.com', '8.8.8.8', 'firebase.google.com'];
+    
+    for (String host in hosts) {
+      try {
+        final result = await InternetAddress.lookup(host)
+            .timeout(const Duration(seconds: 10));
+        if (result.isNotEmpty && result[0].rawAddress.isNotEmpty) {
+          return true;
+        }
+      } catch (_) {
+        continue; // Try next host
+      }
+    }
+    return false; // All hosts failed
+  }
+
   Future<void> _signUp() async {
     if (!_formKey.currentState!.validate()) {
       return;
@@ -43,11 +63,11 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
     });
 
     try {
-      // Create user with Firebase
+      // Create user with Firebase with timeout - increased timeout
       final credential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
-      );
+      ).timeout(const Duration(seconds: 30));
 
       final user = credential.user;
       if (user == null) {
@@ -57,29 +77,35 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
         );
       }
 
-      // Update display name
-      await user.updateDisplayName(_nameController.text.trim());
+      // Update display name with timeout
+      await user.updateDisplayName(_nameController.text.trim())
+          .timeout(const Duration(seconds: 20));
 
-      // Send verification email first
+      // Send verification email first with timeout
       try {
-        await user.sendEmailVerification();
+        await user.sendEmailVerification()
+            .timeout(const Duration(seconds: 30));
       } catch (e) {
         // If email verification fails, delete the user and report
-        await user.delete();
+        try {
+          await user.delete().timeout(const Duration(seconds: 20));
+        } catch (deleteError) {
+          debugPrint('Failed to delete user after email verification failure: $deleteError');
+        }
         throw FirebaseAuthException(
           code: 'email-verification-failed',
           message: 'Failed to send verification email. Please try again.',
         );
       }
 
-      // Attempt to save basic user information in Firestore (optional)
+      // Attempt to save basic user information in Firestore (optional) with timeout
       try {
         await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
           'name': _nameController.text.trim(),
           'email': _emailController.text.trim(),
           'emailVerified': false,
           'createdAt': FieldValue.serverTimestamp(),
-        });
+        }).timeout(const Duration(seconds: 20));
       } catch (e) {
         // Log error but keep the account; Firestore write failure shouldn't block sign-up
         debugPrint('Failed to save user data: $e');
@@ -99,11 +125,35 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
           ),
         );
 
-        // Sign out and return to login
-        await FirebaseAuth.instance.signOut();
+        // Sign out and return to login with timeout
+        try {
+          await FirebaseAuth.instance.signOut().timeout(const Duration(seconds: 10));
+        } catch (e) {
+          debugPrint('Sign out error: $e');
+        }
+        
         if (mounted) {
           Navigator.pushReplacementNamed(context, '/login');
         }
+      }
+    } on TimeoutException {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+        
+        // Check network connectivity only when there's a timeout
+        final hasConnection = await _hasNetworkConnection();
+        final errorMessage = hasConnection 
+            ? 'Request timed out. Firebase servers might be slow. Please try again.'
+            : 'No internet connection. Please check your network and try again.';
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(errorMessage),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     } on FirebaseAuthException catch (e) {
       if (mounted) {
@@ -123,6 +173,9 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
             break;
           case 'email-verification-failed':
             errorMessage = e.message ?? 'Failed to send verification email. Please try again.';
+            break;
+          case 'network-request-failed':
+            errorMessage = 'Network error. Please check your connection and try again.';
             break;
           default:
             errorMessage = e.message ?? 'Registration failed. Please try again.';
