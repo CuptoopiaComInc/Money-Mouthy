@@ -33,7 +33,11 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
       return;
     }
     try {
-      final doc = await FirebaseFirestore.instance.collection('users').doc(_user!.uid).get();
+      final doc =
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(_user.uid)
+              .get();
       if (mounted) {
         setState(() {
           _userDoc = doc;
@@ -65,15 +69,15 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Drawer(
-        child: Center(
-          child: CircularProgressIndicator(),
-        ),
+      return Container(
+        color: Colors.grey.shade50,
+        child: const Center(child: CircularProgressIndicator()),
       );
     }
 
     if (_user == null || _userDoc == null || !_userDoc!.exists) {
-      return Drawer(
+      return Container(
+        color: Colors.grey.shade50,
         child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -85,7 +89,7 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
                   Navigator.of(context).pushReplacementNamed('/login');
                 },
                 child: const Text('Logout'),
-              )
+              ),
             ],
           ),
         ),
@@ -96,8 +100,8 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
     final username = userData['username'] ?? 'No Username';
     final profileImageUrl = userData['profileImageUrl'];
 
-    return Drawer(
-      backgroundColor: Colors.grey.shade50,
+    return Container(
+      color: Colors.grey.shade50,
       child: Column(
         children: [
           // Header Section with light purple background
@@ -116,17 +120,29 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
                 // Profile avatar with edit icon
                 GestureDetector(
                   onTap: () {
-                    Navigator.of(context).push(MaterialPageRoute(builder: (_) => const EditProfileScreen()));
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const EditProfileScreen(),
+                      ),
+                    );
                   },
                   child: Stack(
                     children: [
                       CircleAvatar(
                         radius: 30,
                         backgroundColor: Colors.grey.shade300,
-                        backgroundImage: profileImageUrl != null ? NetworkImage(profileImageUrl) : null,
-                        child: profileImageUrl == null
-                            ? const Icon(Icons.person, size: 30, color: Colors.white)
-                            : null,
+                        backgroundImage:
+                            profileImageUrl != null
+                                ? NetworkImage(profileImageUrl)
+                                : null,
+                        child:
+                            profileImageUrl == null
+                                ? const Icon(
+                                  Icons.person,
+                                  size: 30,
+                                  color: Colors.white,
+                                )
+                                : null,
                       ),
                       Positioned(
                         bottom: 0,
@@ -164,11 +180,8 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
                       ),
                       const SizedBox(height: 2),
                       const Text(
-                        '10 Posts  100 Follows',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.black54,
-                        ),
+                        '100 posts • 100 followers',
+                        style: TextStyle(fontSize: 12, color: Colors.black54),
                       ),
                     ],
                   ),
@@ -176,7 +189,7 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
               ],
             ),
           ),
-          
+
           // Main content - scrollable
           Expanded(
             child: SingleChildScrollView(
@@ -187,23 +200,23 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
                   // Paid Post Section
                   _buildPaidPostSection(),
                   const SizedBox(height: 16),
-                  
+
                   // Post Amount Section
                   _buildPostAmountSection(),
                   const SizedBox(height: 16),
-                  
+
                   // Categories Section
                   _buildCategoriesSection(),
                   const SizedBox(height: 12),
-                  
+
                   // Connect Section
                   _buildConnectSection(),
                   const SizedBox(height: 16),
-                  
+
                   // Share Section
                   _buildShareSection(username),
                   const SizedBox(height: 20),
-                  
+
                   // Delete Account
                   _buildDeleteAccount(context, username),
                 ],
@@ -233,23 +246,17 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
             children: [
               Text(
                 'Paid Post',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                ),
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
               ),
               Text(
                 '\$150',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
               ),
             ],
           ),
         ),
         const SizedBox(height: 8),
-        
+
         // Fund Account text
         const Text(
           'Fund Account',
@@ -260,21 +267,20 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
           ),
         ),
         const SizedBox(height: 6),
-        
+
         // ReUp! button
         SizedBox(
           height: 40,
           child: ElevatedButton.icon(
             onPressed: () {
-              Navigator.of(context).push(MaterialPageRoute(builder: (_) => const WalletScreen()));
+              Navigator.of(
+                context,
+              ).push(MaterialPageRoute(builder: (_) => const WalletScreen()));
             },
             icon: const Icon(Icons.add, size: 20),
             label: const Text(
               'ReUp!',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-              ),
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
             ),
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF5159FF),
@@ -346,7 +352,7 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
-          'Explore Categories',
+          'Rank Categories',
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w500,
@@ -359,7 +365,11 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
           height: 40,
           child: ElevatedButton(
             onPressed: () {
-              Navigator.of(context).push(MaterialPageRoute(builder: (_) => const CategorySelectionScreen()));
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => const CategorySelectionScreen(),
+                ),
+              );
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF5159FF),
@@ -371,10 +381,7 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
             ),
             child: const Text(
               'Categories',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-              ),
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
             ),
           ),
         ),
@@ -400,15 +407,14 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
           height: 40,
           child: ElevatedButton.icon(
             onPressed: () {
-              Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ConnectScreen()));
+              Navigator.of(
+                context,
+              ).push(MaterialPageRoute(builder: (_) => const ConnectScreen()));
             },
             icon: const Icon(Icons.people, size: 20),
             label: const Text(
               'Connect',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-              ),
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
             ),
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF5159FF),
@@ -451,29 +457,29 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
         Wrap(
           spacing: 8,
           runSpacing: 8,
-          children: socialIcons.entries.map((entry) {
-            return Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: Colors.grey.shade200,
-                shape: BoxShape.circle,
-              ),
-              child: IconButton(
-                onPressed: () async {
-                  final url = _buildSocialUrl(entry.key, username);
-                  if (await canLaunchUrl(Uri.parse(url))) {
-                    await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
-                  }
-                },
-                icon: FaIcon(
-                  entry.value,
-                  size: 16,
-                  color: Colors.black54,
-                ),
-              ),
-            );
-          }).toList(),
+          children:
+              socialIcons.entries.map((entry) {
+                return Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade200,
+                    shape: BoxShape.circle,
+                  ),
+                  child: IconButton(
+                    onPressed: () async {
+                      final url = _buildSocialUrl(entry.key, username);
+                      if (await canLaunchUrl(Uri.parse(url))) {
+                        await launchUrl(
+                          Uri.parse(url),
+                          mode: LaunchMode.externalApplication,
+                        );
+                      }
+                    },
+                    icon: FaIcon(entry.value, size: 16, color: Colors.black54),
+                  ),
+                );
+              }).toList(),
         ),
       ],
     );
@@ -512,21 +518,32 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
             builder: (BuildContext context) {
               return AlertDialog(
                 title: const Text('Delete Account'),
-                content: const Text('Are you sure you want to delete your account? This action cannot be undone.'),
+                content: const Text(
+                  'Are you sure you want to delete your account? This action cannot be undone.',
+                ),
                 actions: [
                   TextButton(
                     child: const Text('Cancel'),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                   TextButton(
-                    child: const Text('Delete', style: TextStyle(color: Colors.red)),
+                    child: const Text(
+                      'Delete',
+                      style: TextStyle(color: Colors.red),
+                    ),
                     onPressed: () async {
                       Navigator.of(context).pop();
                       try {
                         final user = FirebaseAuth.instance.currentUser;
                         if (user != null) {
-                          await FirebaseFirestore.instance.collection('users').doc(user.uid).delete();
-                          await FirebaseFirestore.instance.collection('usernames').doc(username).delete();
+                          await FirebaseFirestore.instance
+                              .collection('users')
+                              .doc(user.uid)
+                              .delete();
+                          await FirebaseFirestore.instance
+                              .collection('usernames')
+                              .doc(username)
+                              .delete();
                           await user.delete();
                         }
                         if (mounted) {
@@ -535,7 +552,9 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
                       } catch (e) {
                         if (mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Failed to delete account: $e')),
+                            SnackBar(
+                              content: Text('Failed to delete account: $e'),
+                            ),
                           );
                         }
                       }
@@ -557,4 +576,4 @@ class _ProfileDrawerState extends State<ProfileDrawer> {
       ),
     );
   }
-} 
+}

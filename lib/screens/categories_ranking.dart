@@ -4,18 +4,20 @@ class CategoriesRankingScreen extends StatefulWidget {
   const CategoriesRankingScreen({super.key});
 
   @override
-  State<CategoriesRankingScreen> createState() => _CategoriesRankingScreenState();
+  State<CategoriesRankingScreen> createState() =>
+      _CategoriesRankingScreenState();
 }
 
-class _CategoriesRankingScreenState extends State<CategoriesRankingScreen> with SingleTickerProviderStateMixin {
+class _CategoriesRankingScreenState extends State<CategoriesRankingScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  
+
   // Sample category data with rankings
   final List<Map<String, dynamic>> _categoryStats = [
     {
-      'name': 'Technology',
-      'icon': Icons.computer,
-      'color': Colors.blue,
+      'name': 'Politics',
+      'icon': Icons.how_to_vote,
+      'color': const Color(0xFF4C5DFF),
       'totalPosts': 156,
       'totalEarnings': 2450.50,
       'averagePrice': 15.70,
@@ -23,9 +25,9 @@ class _CategoriesRankingScreenState extends State<CategoriesRankingScreen> with 
       'trendingUp': true,
     },
     {
-      'name': 'Finance',
-      'icon': Icons.monetization_on,
-      'color': Colors.orange,
+      'name': 'News',
+      'icon': Icons.newspaper,
+      'color': const Color(0xFF29CC76),
       'totalPosts': 134,
       'totalEarnings': 3200.25,
       'averagePrice': 23.88,
@@ -33,9 +35,9 @@ class _CategoriesRankingScreenState extends State<CategoriesRankingScreen> with 
       'trendingUp': true,
     },
     {
-      'name': 'Business',
-      'icon': Icons.business,
-      'color': Colors.green,
+      'name': 'Sports',
+      'icon': Icons.sports_soccer,
+      'color': const Color(0xFFC43DFF),
       'totalPosts': 98,
       'totalEarnings': 1890.75,
       'averagePrice': 19.29,
@@ -43,9 +45,9 @@ class _CategoriesRankingScreenState extends State<CategoriesRankingScreen> with 
       'trendingUp': false,
     },
     {
-      'name': 'Education',
-      'icon': Icons.school,
-      'color': Colors.purple,
+      'name': 'Sex',
+      'icon': Icons.favorite,
+      'color': const Color(0xFFFF4081),
       'totalPosts': 87,
       'totalEarnings': 1456.80,
       'averagePrice': 16.74,
@@ -53,9 +55,9 @@ class _CategoriesRankingScreenState extends State<CategoriesRankingScreen> with 
       'trendingUp': true,
     },
     {
-      'name': 'Health',
-      'icon': Icons.health_and_safety,
-      'color': Colors.red,
+      'name': 'Entertainment',
+      'icon': Icons.movie,
+      'color': const Color(0xFFA06A00),
       'totalPosts': 76,
       'totalEarnings': 1123.45,
       'averagePrice': 14.78,
@@ -63,53 +65,13 @@ class _CategoriesRankingScreenState extends State<CategoriesRankingScreen> with 
       'trendingUp': false,
     },
     {
-      'name': 'Lifestyle',
-      'icon': Icons.favorite,
-      'color': Colors.pink,
+      'name': 'Religion',
+      'icon': Icons.church,
+      'color': const Color(0xFF000000),
       'totalPosts': 65,
       'totalEarnings': 987.60,
       'averagePrice': 15.19,
       'topPost': 39.99,
-      'trendingUp': true,
-    },
-    {
-      'name': 'Travel',
-      'icon': Icons.flight,
-      'color': Colors.cyan,
-      'totalPosts': 54,
-      'totalEarnings': 876.30,
-      'averagePrice': 16.23,
-      'topPost': 69.99,
-      'trendingUp': false,
-    },
-    {
-      'name': 'Food',
-      'icon': Icons.restaurant,
-      'color': Colors.amber,
-      'totalPosts': 43,
-      'totalEarnings': 567.20,
-      'averagePrice': 13.19,
-      'topPost': 29.99,
-      'trendingUp': true,
-    },
-    {
-      'name': 'Sports',
-      'icon': Icons.sports_soccer,
-      'color': Colors.teal,
-      'totalPosts': 32,
-      'totalEarnings': 456.80,
-      'averagePrice': 14.28,
-      'topPost': 24.99,
-      'trendingUp': false,
-    },
-    {
-      'name': 'Entertainment',
-      'icon': Icons.movie,
-      'color': Colors.indigo,
-      'totalPosts': 28,
-      'totalEarnings': 398.50,
-      'averagePrice': 14.23,
-      'topPost': 34.99,
       'trendingUp': true,
     },
   ];
@@ -157,10 +119,7 @@ class _CategoriesRankingScreenState extends State<CategoriesRankingScreen> with 
         ),
         title: const Text(
           'Categories Ranking',
-          style: TextStyle(
-            color: Colors.black,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
         ),
         bottom: TabBar(
           controller: _tabController,
@@ -185,7 +144,10 @@ class _CategoriesRankingScreenState extends State<CategoriesRankingScreen> with 
     );
   }
 
-  Widget _buildRankingList(List<Map<String, dynamic>> categories, String sortBy) {
+  Widget _buildRankingList(
+    List<Map<String, dynamic>> categories,
+    String sortBy,
+  ) {
     return ListView.builder(
       padding: const EdgeInsets.all(16),
       itemCount: categories.length,
@@ -197,7 +159,11 @@ class _CategoriesRankingScreenState extends State<CategoriesRankingScreen> with 
     );
   }
 
-  Widget _buildCategoryRankCard(Map<String, dynamic> category, int rank, String sortBy) {
+  Widget _buildCategoryRankCard(
+    Map<String, dynamic> category,
+    int rank,
+    String sortBy,
+  ) {
     Color rankColor = Colors.grey;
     if (rank == 1) rankColor = Colors.amber;
     if (rank == 2) rankColor = Colors.grey[400]!;
@@ -216,9 +182,10 @@ class _CategoriesRankingScreenState extends State<CategoriesRankingScreen> with 
             offset: const Offset(0, 2),
           ),
         ],
-        border: rank <= 3 
-            ? Border.all(color: rankColor, width: 2)
-            : Border.all(color: Colors.grey[200]!, width: 1),
+        border:
+            rank <= 3
+                ? Border.all(color: rankColor, width: 2)
+                : Border.all(color: Colors.grey[200]!, width: 1),
       ),
       child: Row(
         children: [
@@ -226,10 +193,7 @@ class _CategoriesRankingScreenState extends State<CategoriesRankingScreen> with 
           Container(
             width: 40,
             height: 40,
-            decoration: BoxDecoration(
-              color: rankColor,
-              shape: BoxShape.circle,
-            ),
+            decoration: BoxDecoration(color: rankColor, shape: BoxShape.circle),
             child: Center(
               child: Text(
                 '#$rank',
@@ -241,9 +205,9 @@ class _CategoriesRankingScreenState extends State<CategoriesRankingScreen> with 
               ),
             ),
           ),
-          
+
           const SizedBox(width: 16),
-          
+
           // Category Icon
           Container(
             width: 50,
@@ -252,15 +216,11 @@ class _CategoriesRankingScreenState extends State<CategoriesRankingScreen> with 
               color: category['color'].withOpacity(0.1),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(
-              category['icon'],
-              color: category['color'],
-              size: 28,
-            ),
+            child: Icon(category['icon'], color: category['color'], size: 28),
           ),
-          
+
           const SizedBox(width: 16),
-          
+
           // Category Info
           Expanded(
             child: Column(
@@ -277,12 +237,10 @@ class _CategoriesRankingScreenState extends State<CategoriesRankingScreen> with 
                     ),
                     const SizedBox(width: 8),
                     Icon(
-                      category['trendingUp'] 
-                          ? Icons.trending_up 
+                      category['trendingUp']
+                          ? Icons.trending_up
                           : Icons.trending_down,
-                      color: category['trendingUp'] 
-                          ? Colors.green 
-                          : Colors.red,
+                      color: category['trendingUp'] ? Colors.green : Colors.red,
                       size: 20,
                     ),
                   ],
@@ -302,7 +260,7 @@ class _CategoriesRankingScreenState extends State<CategoriesRankingScreen> with 
   Widget _buildStatsRow(Map<String, dynamic> category, String sortBy) {
     String mainStat = '';
     String mainLabel = '';
-    
+
     switch (sortBy) {
       case 'earnings':
         mainStat = '\$${category['totalEarnings'].toStringAsFixed(2)}';
@@ -331,10 +289,7 @@ class _CategoriesRankingScreenState extends State<CategoriesRankingScreen> with 
         const SizedBox(width: 8),
         Text(
           mainLabel,
-          style: TextStyle(
-            fontSize: 12,
-            color: Colors.grey[600],
-          ),
+          style: TextStyle(fontSize: 12, color: Colors.grey[600]),
         ),
       ],
     );
@@ -348,10 +303,7 @@ class _CategoriesRankingScreenState extends State<CategoriesRankingScreen> with 
           const SizedBox(width: 4),
           Text(
             '${category['totalPosts']} posts',
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey[600],
-            ),
+            style: TextStyle(fontSize: 12, color: Colors.grey[600]),
           ),
           const SizedBox(width: 16),
         ],
@@ -360,10 +312,7 @@ class _CategoriesRankingScreenState extends State<CategoriesRankingScreen> with 
           const SizedBox(width: 4),
           Text(
             '\$${category['totalEarnings'].toStringAsFixed(0)}',
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey[600],
-            ),
+            style: TextStyle(fontSize: 12, color: Colors.grey[600]),
           ),
           const SizedBox(width: 16),
         ],
@@ -371,12 +320,9 @@ class _CategoriesRankingScreenState extends State<CategoriesRankingScreen> with 
         const SizedBox(width: 4),
         Text(
           'Avg: \$${category['averagePrice'].toStringAsFixed(2)}',
-          style: TextStyle(
-            fontSize: 12,
-            color: Colors.grey[600],
-          ),
+          style: TextStyle(fontSize: 12, color: Colors.grey[600]),
         ),
       ],
     );
   }
-} 
+}
