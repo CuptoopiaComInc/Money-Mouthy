@@ -36,11 +36,12 @@ class _LoginScreenState extends State<LoginScreen> {
   // Check network connectivity - try multiple hosts for better reliability
   Future<bool> _hasNetworkConnection() async {
     final hosts = ['google.com', '8.8.8.8', 'firebase.google.com'];
-    
+
     for (String host in hosts) {
       try {
-        final result = await InternetAddress.lookup(host)
-            .timeout(const Duration(seconds: 10));
+        final result = await InternetAddress.lookup(
+          host,
+        ).timeout(const Duration(seconds: 10));
         if (result.isNotEmpty && result[0].rawAddress.isNotEmpty) {
           return true;
         }
@@ -86,7 +87,8 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _login() async {
-    if (_emailController.text.trim().isEmpty || _passwordController.text.trim().isEmpty) {
+    if (_emailController.text.trim().isEmpty ||
+        _passwordController.text.trim().isEmpty) {
       setState(() {
         _errorMessage = 'Please enter both email and password';
       });
@@ -100,10 +102,12 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       // Add timeout to Firebase authentication - increased timeout
-      final credential = await _auth.signInWithEmailAndPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
-      ).timeout(const Duration(seconds: 30));
+      final credential = await _auth
+          .signInWithEmailAndPassword(
+            email: _emailController.text.trim(),
+            password: _passwordController.text.trim(),
+          )
+          .timeout(const Duration(seconds: 30));
 
       // Reload user to get the latest emailVerified flag with timeout
       await credential.user?.reload().timeout(const Duration(seconds: 20));
@@ -120,9 +124,10 @@ class _LoginScreenState extends State<LoginScreen> {
         // Send a new verification email with timeout
         await user.sendEmailVerification().timeout(const Duration(seconds: 20));
         await _auth.signOut();
-        
+
         setState(() {
-          _errorMessage = 'Please verify your email first. A new verification link has been sent to your email.';
+          _errorMessage =
+              'Please verify your email first. A new verification link has been sent to your email.';
           _isLoading = false;
         });
         return;
@@ -130,10 +135,14 @@ class _LoginScreenState extends State<LoginScreen> {
 
       // Update or create user document (emailVerified/lastLogin) with timeout
       try {
-        await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
-          'emailVerified': true,
-          'lastLogin': FieldValue.serverTimestamp(),
-        }, SetOptions(merge: true)).timeout(const Duration(seconds: 20));
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .set({
+              'emailVerified': true,
+              'lastLogin': FieldValue.serverTimestamp(),
+            }, SetOptions(merge: true))
+            .timeout(const Duration(seconds: 20));
       } catch (e) {
         debugPrint('Unable to update user doc after login: $e');
       }
@@ -156,7 +165,8 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!mounted) return;
 
       // route decision
-      final hasUsername = (userData?['username']?.toString().isNotEmpty ?? false);
+      final hasUsername =
+          (userData?['username']?.toString().isNotEmpty ?? false);
       if (profileCompleted) {
         Navigator.pushReplacementNamed(context, '/home');
       } else if (!hasUsername) {
@@ -168,10 +178,11 @@ class _LoginScreenState extends State<LoginScreen> {
       if (mounted) {
         // Check network connectivity only when there's a timeout
         final hasConnection = await _hasNetworkConnection();
-        final errorMessage = hasConnection 
-            ? 'Request timed out. Firebase servers might be slow. Please try again.'
-            : 'No internet connection. Please check your network and try again.';
-        
+        final errorMessage =
+            hasConnection
+                ? 'Request timed out. Firebase servers might be slow. Please try again.'
+                : 'No internet connection. Please check your network and try again.';
+
         setState(() {
           _errorMessage = errorMessage;
           _isLoading = false;
@@ -182,7 +193,8 @@ class _LoginScreenState extends State<LoginScreen> {
         String errorMessage;
         switch (e.code) {
           case 'user-not-found':
-            errorMessage = 'No account found with this email. Please sign up first.';
+            errorMessage =
+                'No account found with this email. Please sign up first.';
             break;
           case 'wrong-password':
           case 'invalid-credential':
@@ -192,10 +204,12 @@ class _LoginScreenState extends State<LoginScreen> {
             errorMessage = 'Please enter a valid email address.';
             break;
           case 'user-disabled':
-            errorMessage = 'This account has been disabled. Please contact support.';
+            errorMessage =
+                'This account has been disabled. Please contact support.';
             break;
           case 'network-request-failed':
-            errorMessage = 'Network error. Please check your connection and try again.';
+            errorMessage =
+                'Network error. Please check your connection and try again.';
             break;
           default:
             errorMessage = e.message ?? 'Login failed. Please try again.';
@@ -233,7 +247,7 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Column(
             children: [
               const SizedBox(height: 40),
-              
+
               // Title
               const Center(
                 child: Text(
@@ -245,9 +259,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
               ),
-              
+
               const SizedBox(height: 30),
-              
+
               // Tagline
               RichText(
                 text: const TextSpan(
@@ -257,9 +271,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     fontWeight: FontWeight.w500,
                   ),
                   children: <TextSpan>[
-                    TextSpan(
-                      text: 'Your opinion has value ',
-                    ),
+                    TextSpan(text: 'Your opinion has value '),
                     TextSpan(
                       text: '\$0.05',
                       style: TextStyle(
@@ -267,16 +279,14 @@ class _LoginScreenState extends State<LoginScreen> {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    TextSpan(
-                      text: ' or more! Join the conversation',
-                    ),
+                    TextSpan(text: ' or more! Join the conversation'),
                   ],
                 ),
                 textAlign: TextAlign.center,
               ),
-              
+
               const SizedBox(height: 40),
-              
+
               // Social login buttons (if not showing password field)
               if (!_showPasswordField) ...[
                 // Google login button
@@ -317,9 +327,9 @@ class _LoginScreenState extends State<LoginScreen> {
                     ],
                   ),
                 ),
-                
+
                 const SizedBox(height: 16),
-                
+
                 // Apple login button
                 ElevatedButton(
                   onPressed: () {},
@@ -349,44 +359,37 @@ class _LoginScreenState extends State<LoginScreen> {
                     ],
                   ),
                 ),
-                
+
                 const SizedBox(height: 32),
-                
+
                 // Or divider
                 const Row(
                   children: [
                     Expanded(
-                      child: Divider(
-                        color: Colors.grey,
-                        thickness: 0.5,
-                      ),
+                      child: Divider(color: Colors.grey, thickness: 0.5),
                     ),
                     Padding(
                       padding: EdgeInsets.symmetric(horizontal: 16.0),
-                      child: Text(
-                        "Or",
-                        style: TextStyle(color: Colors.grey),
-                      ),
+                      child: Text("Or", style: TextStyle(color: Colors.grey)),
                     ),
                     Expanded(
-                      child: Divider(
-                        color: Colors.grey,
-                        thickness: 0.5,
-                      ),
+                      child: Divider(color: Colors.grey, thickness: 0.5),
                     ),
                   ],
                 ),
-                
+
                 const SizedBox(height: 32),
               ],
-              
+
               // Email/Username field
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   if (_showPasswordField) ...[
                     Text(
-                      _emailController.text.contains('@') ? _emailController.text : '@${_emailController.text}',
+                      _emailController.text.contains('@')
+                          ? _emailController.text
+                          : '@${_emailController.text}',
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w500,
@@ -395,7 +398,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     const SizedBox(height: 16),
                   ],
-                  
+
                   if (!_showPasswordField)
                     TextField(
                       controller: _emailController,
@@ -417,11 +420,17 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: Color(0xFF5159FF), width: 2),
+                          borderSide: const BorderSide(
+                            color: Color(0xFF5159FF),
+                            width: 2,
+                          ),
                         ),
                         errorBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: Colors.red, width: 2),
+                          borderSide: const BorderSide(
+                            color: Colors.red,
+                            width: 2,
+                          ),
                         ),
                         contentPadding: const EdgeInsets.symmetric(
                           horizontal: 16,
@@ -430,7 +439,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       style: const TextStyle(fontSize: 16),
                     ),
-                  
+
                   if (_showPasswordField)
                     TextField(
                       controller: _passwordController,
@@ -453,7 +462,10 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: Color(0xFF5159FF), width: 2),
+                          borderSide: const BorderSide(
+                            color: Color(0xFF5159FF),
+                            width: 2,
+                          ),
                         ),
                         contentPadding: const EdgeInsets.symmetric(
                           horizontal: 16,
@@ -461,7 +473,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         suffixIcon: IconButton(
                           icon: Icon(
-                            _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                            _obscurePassword
+                                ? Icons.visibility_off
+                                : Icons.visibility,
                             color: Colors.grey,
                           ),
                           onPressed: () {
@@ -475,7 +489,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                 ],
               ),
-              
+
               // Error message
               if (_errorMessage != null) ...[
                 const SizedBox(height: 8),
@@ -483,22 +497,20 @@ class _LoginScreenState extends State<LoginScreen> {
                   alignment: Alignment.centerLeft,
                   child: Text(
                     _errorMessage!,
-                    style: const TextStyle(
-                      color: Colors.red,
-                      fontSize: 14,
-                    ),
+                    style: const TextStyle(color: Colors.red, fontSize: 14),
                   ),
                 ),
               ],
-              
+
               const SizedBox(height: 24),
-              
+
               // Login button
               ElevatedButton(
-                onPressed: _isLoading 
-                    ? null 
-                    : _showPasswordField 
-                        ? _login 
+                onPressed:
+                    _isLoading
+                        ? null
+                        : _showPasswordField
+                        ? _login
                         : _handleInitialSubmit,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF5159FF),
@@ -510,26 +522,29 @@ class _LoginScreenState extends State<LoginScreen> {
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   minimumSize: const Size(double.infinity, 56),
                 ),
-                child: _isLoading
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                child:
+                    _isLoading
+                        ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.white,
+                            ),
+                          ),
+                        )
+                        : const Text(
+                          'Log In',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
-                      )
-                    : const Text(
-                        'Log In',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
               ),
-              
+
               const SizedBox(height: 16),
-              
+
               // Forgot Password link
               TextButton(
                 onPressed: () {
@@ -549,19 +564,16 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
               ),
-              
+
               const SizedBox(height: 32),
-              
+
               // Terms and conditions
               Padding(
                 padding: const EdgeInsets.only(bottom: 40),
                 child: RichText(
                   textAlign: TextAlign.center,
                   text: TextSpan(
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey.shade600,
-                    ),
+                    style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                     children: const [
                       TextSpan(
                         text: "By signing up you agree to Money Mouthy's ",
@@ -573,9 +585,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           color: Colors.black,
                         ),
                       ),
-                      TextSpan(
-                        text: ".",
-                      ),
+                      TextSpan(text: "."),
                     ],
                   ),
                 ),
@@ -586,4 +596,4 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
     );
   }
-} 
+}

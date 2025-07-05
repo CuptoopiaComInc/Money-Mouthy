@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:money_mouthy_two/screens/connect_screen.dart';
 import '../services/post_service.dart';
 import '../services/wallet_service.dart';
 
@@ -9,7 +10,8 @@ class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key, required this.userId});
 
   Future<Map<String, dynamic>?> _loadUser() async {
-    final doc = await FirebaseFirestore.instance.collection('users').doc(userId).get();
+    final doc =
+        await FirebaseFirestore.instance.collection('users').doc(userId).get();
     return doc.data();
   }
 
@@ -39,7 +41,11 @@ class ProfileScreen extends StatelessWidget {
                 color: Colors.grey.shade200,
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.arrow_back_ios_new_rounded, size: 16, color: Colors.black87),
+              child: const Icon(
+                Icons.arrow_back_ios_new_rounded,
+                size: 16,
+                color: Colors.black87,
+              ),
             ),
           ),
         ),
@@ -49,10 +55,18 @@ class ProfileScreen extends StatelessWidget {
             const Spacer(),
             // Paid Post label – show if user has paid posts
             FutureBuilder<List<Post>>(
-              future: Future.value(postService.getAllPosts().where((p) => p.authorId == userId && p.price > 0).toList()),
+              future: Future.value(
+                postService
+                    .getAllPosts()
+                    .where((p) => p.authorId == userId && p.price > 0)
+                    .toList(),
+              ),
               builder: (context, postSnap) {
-                if (!postSnap.hasData || postSnap.data!.isEmpty) return const SizedBox();
-                final topPrice = postSnap.data!.map((e) => e.price).reduce((a, b) => a > b ? a : b);
+                if (!postSnap.hasData || postSnap.data!.isEmpty)
+                  return const SizedBox();
+                final topPrice = postSnap.data!
+                    .map((e) => e.price)
+                    .reduce((a, b) => a > b ? a : b);
                 return Row(
                   children: [
                     Text(
@@ -66,7 +80,10 @@ class ProfileScreen extends StatelessWidget {
                     ),
                     const SizedBox(width: 8),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.grey.shade100,
                         borderRadius: BorderRadius.circular(20),
@@ -74,7 +91,10 @@ class ProfileScreen extends StatelessWidget {
                       ),
                       child: Text(
                         '\$ ${topPrice.toStringAsFixed(0)}',
-                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                   ],
@@ -84,16 +104,17 @@ class ProfileScreen extends StatelessWidget {
             const SizedBox(width: 16),
           ],
         ),
-        actions: isSelf
-            ? [
-                IconButton(
-                  icon: const Icon(Icons.edit, color: Colors.black),
-                  onPressed: () {
-                    Navigator.pushNamed(context, '/edit_profile');
-                  },
-                )
-              ]
-            : null,
+        actions:
+            isSelf
+                ? [
+                  IconButton(
+                    icon: const Icon(Icons.edit, color: Colors.black),
+                    onPressed: () {
+                      Navigator.pushNamed(context, '/edit_profile');
+                    },
+                  ),
+                ]
+                : null,
       ),
       body: FutureBuilder<Map<String, dynamic>?>(
         future: _loadUser(),
@@ -109,7 +130,11 @@ class ProfileScreen extends StatelessWidget {
           final bio = data['bio'] ?? '';
           final profileImageUrl = data['profileImageUrl'];
 
-          final userPosts = postService.getAllPosts().where((p) => p.authorId == userId).toList();
+          final userPosts =
+              postService
+                  .getAllPosts()
+                  .where((p) => p.authorId == userId)
+                  .toList();
 
           return SingleChildScrollView(
             child: Column(
@@ -118,10 +143,7 @@ class ProfileScreen extends StatelessWidget {
                 // Header with avatar overlay
                 Stack(
                   children: [
-                    Container(
-                      height: 120,
-                      color: Colors.grey[300],
-                    ),
+                    Container(height: 120, color: Colors.grey[300]),
                     Positioned(
                       left: 16,
                       bottom: -40,
@@ -130,8 +152,14 @@ class ProfileScreen extends StatelessWidget {
                         children: [
                           CircleAvatar(
                             radius: 40,
-                            backgroundImage: profileImageUrl != null ? NetworkImage(profileImageUrl) : null,
-                            child: profileImageUrl == null ? const Icon(Icons.person, size: 40) : null,
+                            backgroundImage:
+                                profileImageUrl != null
+                                    ? NetworkImage(profileImageUrl)
+                                    : null,
+                            child:
+                                profileImageUrl == null
+                                    ? const Icon(Icons.person, size: 40)
+                                    : null,
                           ),
                           if (isSelf)
                             Positioned(
@@ -143,7 +171,11 @@ class ProfileScreen extends StatelessWidget {
                                   shape: BoxShape.circle,
                                 ),
                                 padding: const EdgeInsets.all(4),
-                                child: const Icon(Icons.edit, size: 14, color: Colors.white),
+                                child: const Icon(
+                                  Icons.edit,
+                                  size: 14,
+                                  color: Colors.white,
+                                ),
                               ),
                             ),
                         ],
@@ -156,13 +188,22 @@ class ProfileScreen extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Text(
                     username,
-                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
                 if (bio.isNotEmpty)
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                    child: Text(bio, style: const TextStyle(color: Colors.grey)),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 4,
+                    ),
+                    child: Text(
+                      bio,
+                      style: const TextStyle(color: Colors.grey),
+                    ),
                   ),
                 const SizedBox(height: 16),
 
@@ -170,23 +211,37 @@ class ProfileScreen extends StatelessWidget {
                 if (isSelf) ...[
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Text('Fund Account', style: TextStyle(color: Colors.grey[800], fontWeight: FontWeight.w600)),
+                    child: Text(
+                      'Fund Account',
+                      style: TextStyle(
+                        color: Colors.grey[800],
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: _AddPaymentButton(onPressed: () async {
-                      final added = await walletService.addFunds(10); // demo $10
-                      if (added) {
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Payment simulated')));
-                      }
-                    }),
+                    child: _AddPaymentButton(
+                      onPressed: () async {
+                        final added = await walletService.addFunds(
+                          10,
+                        ); // demo $10
+                        if (added) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Payment simulated')),
+                          );
+                        }
+                      },
+                    ),
                   ),
                   const SizedBox(height: 16),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: ValueListenableBuilder<double>(
-                      valueListenable: ValueNotifier<double>(walletService.currentBalance),
+                      valueListenable: ValueNotifier<double>(
+                        walletService.currentBalance,
+                      ),
                       builder: (context, balance, _) {
                         final pct = (balance / 100).clamp(0.0, 1.0);
                         return Column(
@@ -196,7 +251,9 @@ class ProfileScreen extends StatelessWidget {
                               children: [
                                 Container(
                                   height: 2,
-                                  decoration: BoxDecoration(color: Colors.grey.shade400),
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey.shade400,
+                                  ),
                                 ),
                                 FractionallySizedBox(
                                   widthFactor: pct,
@@ -227,9 +284,18 @@ class ProfileScreen extends StatelessWidget {
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: const [
-                            Text('Follow Other accounts', style: TextStyle(fontWeight: FontWeight.w600)),
+                            Text(
+                              'Follow Other accounts',
+                              style: TextStyle(fontWeight: FontWeight.w600),
+                            ),
                             SizedBox(height: 2),
-                            Text('Connect with other users around the world.', style: TextStyle(color: Colors.grey, fontSize: 12)),
+                            Text(
+                              'Connect with other users around the world.',
+                              style: TextStyle(
+                                color: Colors.grey,
+                                fontSize: 12,
+                              ),
+                            ),
                           ],
                         ),
                         IconButton(
@@ -240,13 +306,20 @@ class ProfileScreen extends StatelessWidget {
                     ),
                   ),
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
                     child: ElevatedButton.icon(
-                      onPressed: () => Navigator.pushNamed(context, '/connect'),
+                      onPressed: () {
+                        Navigator.of(context).pushNamed('/connect');
+                      },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF5159FF),
                         foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                         minimumSize: const Size(double.infinity, 48),
                       ),
                       icon: const Icon(Icons.people),
@@ -258,14 +331,25 @@ class ProfileScreen extends StatelessWidget {
 
                 // User posts list
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  child: Text('Posts', style: TextStyle(color: Colors.grey[800], fontWeight: FontWeight.w600)),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  child: Text(
+                    'Posts',
+                    style: TextStyle(
+                      color: Colors.grey[800],
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ),
                 if (userPosts.isEmpty)
-                  const Center(child: Padding(
-                    padding: EdgeInsets.all(24.0),
-                    child: Text('This user has no posts'),
-                  ))
+                  const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(24.0),
+                      child: Text('This user has no posts'),
+                    ),
+                  )
                 else
                   ListView.builder(
                     physics: const NeverScrollableScrollPhysics(),
@@ -274,10 +358,17 @@ class ProfileScreen extends StatelessWidget {
                     itemBuilder: (context, i) {
                       final post = userPosts[i];
                       return Card(
-                        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                        margin: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 6,
+                        ),
                         child: ListTile(
                           title: Text(post.title ?? ''),
-                          subtitle: Text(post.content, maxLines: 2, overflow: TextOverflow.ellipsis),
+                          subtitle: Text(
+                            post.content,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                           trailing: Text(post.formattedPrice),
                         ),
                       );
@@ -311,4 +402,4 @@ class _AddPaymentButton extends StatelessWidget {
       label: const Text('Add Payment'),
     );
   }
-} 
+}

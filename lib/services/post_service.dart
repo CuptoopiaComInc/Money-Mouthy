@@ -78,9 +78,10 @@ class Post {
       price: map['price'].toDouble(),
       category: map['category'],
       tags: List<String>.from(map['tags'] ?? []),
-      createdAt: map['createdAt'] is int
-          ? DateTime.fromMillisecondsSinceEpoch(map['createdAt'])
-          : (map['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      createdAt:
+          map['createdAt'] is int
+              ? DateTime.fromMillisecondsSinceEpoch(map['createdAt'])
+              : (map['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       likes: map['likes'] ?? 0,
       comments: map['comments'] ?? 0,
       views: map['views'] ?? 0,
@@ -163,7 +164,10 @@ class PostService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _postsSubscription;
   String get _currentUserId => _auth.currentUser?.uid ?? 'anonymous';
-  String get _currentUserName => _auth.currentUser?.displayName ?? _auth.currentUser?.email ?? 'Anonymous User';
+  String get _currentUserName =>
+      _auth.currentUser?.displayName ??
+      _auth.currentUser?.email ??
+      'Anonymous User';
 
   Future<void> initialize() async {
     _listenToPosts();
@@ -176,14 +180,16 @@ class PostService {
         .orderBy('createdAt', descending: true)
         .snapshots()
         .listen((snapshot) {
-      _posts
-        ..clear()
-        ..addAll(snapshot.docs.map((doc) {
-          final data = doc.data();
-          final map = Map<String, dynamic>.from(data)..['id'] = doc.id;
-          return Post.fromMap(map);
-        }));
-    });
+          _posts
+            ..clear()
+            ..addAll(
+              snapshot.docs.map((doc) {
+                final data = doc.data();
+                final map = Map<String, dynamic>.from(data)..['id'] = doc.id;
+                return Post.fromMap(map);
+              }),
+            );
+        });
   }
 
   Future<String> createPost({
@@ -229,16 +235,19 @@ class PostService {
   }
 
   List<Post> getPostsSortedBy(String sortBy, {String? category}) {
-    var posts = category == null || category == 'All' 
-        ? List<Post>.from(_posts)
-        : getPostsByCategory(category);
+    var posts =
+        category == null || category == 'All'
+            ? List<Post>.from(_posts)
+            : getPostsByCategory(category);
 
     switch (sortBy) {
       case 'Highest Paid':
         posts.sort((a, b) => b.price.compareTo(a.price));
         break;
       case 'Most Popular':
-        posts.sort((a, b) => (b.likes + b.comments).compareTo(a.likes + a.comments));
+        posts.sort(
+          (a, b) => (b.likes + b.comments).compareTo(a.likes + a.comments),
+        );
         break;
       case 'Recent':
         posts.sort((a, b) => b.createdAt.compareTo(a.createdAt));
@@ -286,16 +295,12 @@ class PostService {
   List<String> getCategories() {
     return [
       'All',
-      'Technology',
-      'Business', 
-      'Finance',
-      'Lifestyle',
-      'Education',
-      'Health',
-      'Travel',
-      'Food',
+      'Politics',
+      'News',
       'Sports',
-      'Entertainment'
+      'Sex',
+      'Entertainment',
+      'Religion',
     ];
   }
 
@@ -306,7 +311,7 @@ class PostService {
   // Statistics
   int get totalPosts => _posts.length;
   int get userPostsCount => getUserPosts().length;
-  
+
   double get averagePostPrice {
     if (_posts.isEmpty) return 0.0;
     return _posts.map((p) => p.price).reduce((a, b) => a + b) / _posts.length;
@@ -323,4 +328,4 @@ class PostService {
     }
     return categoryCount;
   }
-} 
+}

@@ -46,7 +46,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '717677160958',
     projectId: 'money-mouthy',
     authDomain: 'money-mouthy.firebaseapp.com',
-    storageBucket: 'money-mouthy.appspot.com',
+    storageBucket: 'money-mouthy.firebasestorage.app',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
@@ -54,15 +54,15 @@ class DefaultFirebaseOptions {
     appId: '1:717677160958:android:f5bc9db3c362da16a738af',
     messagingSenderId: '717677160958',
     projectId: 'money-mouthy',
-    storageBucket: 'money-mouthy.appspot.com',
+    storageBucket: 'money-mouthy.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyD_lcbaRg1tNGkh0Gjo4fzphQBVqqTJ0PM',
+    apiKey: 'AIzaSyC1ydzTXfkhy-dCry83jPtIqDbUrcWx2Ow',
     appId: '1:717677160958:ios:f5bc9db3c362da16a738af',
     messagingSenderId: '717677160958',
     projectId: 'money-mouthy',
-    storageBucket: 'money-mouthy.appspot.com',
+    storageBucket: 'money-mouthy.firebasestorage.app',
     iosBundleId: 'com.moneymouthy.app',
   );
 
@@ -71,7 +71,7 @@ class DefaultFirebaseOptions {
     appId: '1:717677160958:ios:f5bc9db3c362da16a738af',
     messagingSenderId: '717677160958',
     projectId: 'money-mouthy',
-    storageBucket: 'money-mouthy.appspot.com',
+    storageBucket: 'money-mouthy.firebasestorage.app',
     iosBundleId: 'com.moneymouthy.app',
   );
 
@@ -81,6 +81,6 @@ class DefaultFirebaseOptions {
     messagingSenderId: '717677160958',
     projectId: 'money-mouthy',
     authDomain: 'money-mouthy.firebaseapp.com',
-    storageBucket: 'money-mouthy.appspot.com',
+    storageBucket: 'money-mouthy.firebasestorage.app',
   );
 }
